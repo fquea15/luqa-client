@@ -1,11 +1,9 @@
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import "@/styles/global.css"
-
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+import "@/styles/global.css";
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
-  });
+  const [loaded] = useFonts({});
 
   if (!loaded) {
     // Async font loading only occurs in development.
