@@ -32,7 +32,7 @@ const InputField = ({
           <Text className={cn("mb-3 text-lg text-primary-500", labelStyle)}>{label}</Text>
           <View
             className={cn(
-              "relative flex flex-row items-center justify-start border border-neutral-100 bg-background-300 focus:border-secondary-500",
+              "relative flex flex-row items-center justify-start rounded-full border border-neutral-100 bg-background-300 focus:border-secondary-500",
               isFocused ? "border-secondary-500" : "border-background-400",
               containerStyle
             )}
