@@ -9,4 +9,13 @@ module.exports = defineConfig([
   {
     ignores: ["dist", "node_modules"],
   },
+  {
+    "prettier/prettier": [
+      "error",
+      {
+        "singleQuote": true,
+        "parser": "flow"
+      }
+    ]
+  }
 ]);

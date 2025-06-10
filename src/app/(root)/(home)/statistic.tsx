@@ -1,13 +1,19 @@
-﻿import { Text, View } from "react-native";
-import CustomButton from "@/components/ui/CustomButton";
+﻿import { ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import MonthlySummary from "@/components/statistics/MonthlySummary";
+import ProgressBar from "@/components/statistics/ProgressBar";
+import CategoryPerformance from "@/components/statistics/CategoryPerformance";
+import TrendChart from "@/components/statistics/TrendChart";
 
-const StatisticScreen = () => {
+export default function StatisticScreen() {
   return (
-    <View className={"flex-1 items-center justify-center bg-background-100"}>
-      <Text>Estadisticas de los movimeientos</Text>
-      <CustomButton title={"Ver Mas"} />
-    </View>
+    <SafeAreaView className="flex-1 bg-background-100">
+      <ScrollView className="flex-1 px-4 py-6">
+        <MonthlySummary />
+        <ProgressBar />
+        <CategoryPerformance />
+        <TrendChart />
+      </ScrollView>
+    </SafeAreaView>
   );
-};
-
-export default StatisticScreen;
+}

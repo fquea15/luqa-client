@@ -1,11 +1,11 @@
-import { Text, TouchableOpacity } from "react-native";
 import { cn } from "@/shared/lib/utils";
 import { ButtonProps } from "@/types/type";
+import { Text, TouchableOpacity } from "react-native";
 
 const getBgVariantStyle = (variant: ButtonProps["bgVariant"]) => {
   switch (variant) {
     case "secondary":
-      return "bg-secondary-500";
+      return "bg-secondary-600";
     case "danger":
       return "bg-red-500";
     case "success":
