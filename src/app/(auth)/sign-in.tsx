@@ -46,7 +46,7 @@ export default function HomeScreen() {
         <View className={"mt-8 flex-1 flex-col gap-6"}>
           <CustomButton title={"Iniciar Sesión"} />
           <CustomButton title={"Registrarse"} bgVariant={"secondary"} />
-          <Link href={"/(root)/(home)/statistic"} className={"mt-8 text-center"}>
+          <Link href={"/(root)/(tabs)/home"} className={"mt-8 text-center"}>
             <Text className={"text-lg text-primary-500"}>¿Olvidaste la contraseña?</Text>
           </Link>
         </View>

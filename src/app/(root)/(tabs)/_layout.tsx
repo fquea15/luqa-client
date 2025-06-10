@@ -1,9 +1,12 @@
 import { Tabs } from "expo-router";
 
 const Layout = () => (
-  <Tabs initialRouteName="home" screenOptions={{
-    headerShown: false
-  }}>
+  <Tabs
+    initialRouteName="home"
+    screenOptions={{
+      headerShown: false,
+    }}
+  >
     <Tabs.Screen
       name={"home"}
       options={{
@@ -14,7 +17,6 @@ const Layout = () => (
       name={"route"}
       options={{
         title: "Rutas",
-
       }}
     />
 
@@ -22,7 +24,6 @@ const Layout = () => (
       name={"profile"}
       options={{
         title: "Perfil",
-
       }}
     />
   </Tabs>
