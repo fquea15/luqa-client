@@ -8,22 +8,15 @@ const Layout = () => {
       }}
     >
       <Stack.Screen
-        name="budget"
+        name="index"
         options={{
-          headerShown: false,
+          title: "Presupuesto",
         }}
       />
       <Stack.Screen
-        name="transaction"
+        name="category/[id]"
         options={{
           title: "Movimientos",
-        }}
-      />
-      <Stack.Screen
-        name="statistic"
-        options={{
-          title: "Estadistica",
-          headerShown: false,
         }}
       />
     </Stack>
