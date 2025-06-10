@@ -1,6 +1,6 @@
-﻿import { TextInputProps, TouchableOpacityProps } from "react-native";
+﻿import { LucideIcon } from "lucide-react-native";
 import { ComponentType } from "react";
-import { LucideIcon } from "lucide-react-native";
+import { TextInputProps, TouchableOpacityProps } from "react-native";
 
 // CustomButton types
 declare interface ButtonProps extends TouchableOpacityProps {
@@ -14,7 +14,6 @@ declare interface ButtonProps extends TouchableOpacityProps {
 
 // InputFiled Types
 declare interface InputFieldProps extends TextInputProps {
-  label: string;
   icon?: LucideIcon;
   secureTextEntry?: boolean;
   labelStyle?: string;
@@ -22,4 +21,5 @@ declare interface InputFieldProps extends TextInputProps {
   inputStyle?: string;
   iconStyle?: string;
   className?: string;
+  medium?: boolean;
 }
