@@ -25,6 +25,15 @@ const Layout = () => (
 
       }}
     />
+
+    // Ruta para la pantalla de comunidades footer
+    <Tabs.Screen
+      name={"communities"}
+      options={{
+        title: "communities",
+      }}
+    />
+
   </Tabs>
 );
 

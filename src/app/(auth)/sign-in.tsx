@@ -1,10 +1,10 @@
-import { Image, ScrollView, Text, View } from "react-native";
-import { images } from "@/constants";
-import InputField from "@/components/ui/InputField";
-import { useState } from "react";
-import { LockIcon, MailIcon } from "lucide-react-native";
 import CustomButton from "@/components/ui/CustomButton";
+import InputField from "@/components/ui/InputField";
+import { images } from "@/constants";
 import { Link } from "expo-router";
+import { LockIcon, MailIcon } from "lucide-react-native";
+import { useState } from "react";
+import { Image, ScrollView, Text, View } from "react-native";
 
 export default function HomeScreen() {
   const [form, setForm] = useState({
@@ -46,9 +46,14 @@ export default function HomeScreen() {
         <View className={"mt-8 flex-1 flex-col gap-6"}>
           <CustomButton title={"Iniciar Sesión"} />
           <CustomButton title={"Registrarse"} bgVariant={"secondary"} />
-          <Link href={"/home"} className={"mt-8 text-center"}>
+          <Link href={"/welcome"} className={"mt-8 text-center"}>
             <Text className={"text-lg text-primary-500"}>¿Olvidaste la contraseña?</Text>
           </Link>
+          
+          <Link href="/(root)/(tabs)/home" className="mt-8 text-center">
+            <Text className="text-lg text-primary-500">Ir a la app</Text>
+          </Link>
+
         </View>
       </View>
     </ScrollView>
