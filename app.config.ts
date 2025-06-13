@@ -7,5 +7,6 @@ export default {
     extra: {
       API_URL: process.env.API_URL,
     },
+        plugins: ["expo-video"], // ✅ AÑADIDO AQUÍ
   },
 };
