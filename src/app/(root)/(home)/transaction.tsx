@@ -14,11 +14,6 @@ const TransactionScreen = () => {
         <Text className="text-lg font-semibold text-textPrimary-800 mb-2">Movimientos</Text>
 
         <TransactionList />
-
-        <View className="my-6">
-          <CustomButton title="Ver Más" />
-        </View>
-
         <RecommendationBox />
       </ScrollView>
     </SafeAreaView>

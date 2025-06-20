@@ -1,9 +1,16 @@
 import { Text, View } from "react-native";
 
-export default function Header() {
+interface Props {
+  fullName: string;
+}
+
+export default function Header({ fullName }: Props) {
   return (
-    <View className="mb-4">
-      <Text className="text-2xl font-semibold text-textPrimary-800">¡Hola, Juan! 👋</Text>
+    
+    <View className="mb-2">
+      <Text className="text-2xl font-bold text-textPrimary-800">
+        ¡Hola, {fullName}! 👋
+      </Text>
     </View>
   );
 }

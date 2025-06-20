@@ -14,6 +14,7 @@ type Props = {
   spent: number;
   budget: number;
   subcategories?: Subcategory[];
+  status: "Perfecto" | "Excedido" | "Sin presupuesto";
 };
 
 export default function BudgetCard({
@@ -22,18 +23,28 @@ export default function BudgetCard({
   spent,
   budget,
   subcategories,
+  status,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   return (
     <View className="bg-white rounded-2xl shadow px-4 py-5 mb-5">
+      {/* Cabecera con estado */}
       <View className="flex-row justify-between items-center mb-2">
         <View>
           <Text className="text-base font-semibold text-textPrimary-800">{title}</Text>
-          <Text className="text-sm text-textSecondary-500">{percentage}% del total</Text>
+          <Text className="text-sm text-textSecondary-500">{percentage.toFixed(0)}% del total</Text>
         </View>
-        <Text className="text-success-600 bg-success-100 px-3 py-1 rounded-full text-xs font-semibold">
-          Perfecto
+
+        <Text
+          className={`
+            px-3 py-1 rounded-full text-xs font-semibold
+            ${status === "Perfecto" ? "text-success-600 bg-success-100" :
+              status === "Excedido" ? "text-danger-600 bg-danger-100" :
+              "text-warning-600 bg-warning-100"}
+          `}
+        >
+          {status}
         </Text>
       </View>
 
@@ -51,17 +62,17 @@ export default function BudgetCard({
 
       {/* Barra de progreso */}
       <View className="h-3 bg-background-300 rounded-full overflow-hidden mb-1">
-        <View className="bg-primary-500 h-full" style={{ width: `${(spent / budget) * 100}%` }} />
+        <View className="bg-primary-500 h-full" style={{ width: `${percentage}%` }} />
       </View>
       <Text className="text-xs text-primary-700 font-semibold">
-        Progreso: {((spent / budget) * 100).toFixed(1)}%
+        Progreso: {percentage.toFixed(1)}%
       </Text>
       <Text className="text-xs text-success-600 mt-1">
         Restante: S/. {(budget - spent).toFixed(2)}
       </Text>
 
-      {/* Botón colapsable */}
-      {subcategories && (
+      {/* Subcategorías */}
+      {subcategories && subcategories.length > 0 && (
         <>
           <TouchableOpacity onPress={() => setExpanded(!expanded)} className="mt-3">
             <Text className="text-primary-600 text-sm font-medium">
