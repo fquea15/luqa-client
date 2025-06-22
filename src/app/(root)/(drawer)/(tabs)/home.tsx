@@ -1,14 +1,15 @@
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
-import { useEffect, useState } from "react";
-import Header from "@/components/home/Header";
-import { getBudget, getTransactions } from "@/shared/services/homeService";
-import RegisterModal from "@/components/transactions/RegisterModal";
 import DistributionBox from "@/components/home/DistributionBox";
 import ExpenseChart from "@/components/home/ExpenseChart";
+import Header from "@/components/home/Header";
 import LearningCard from "@/components/home/PointsCard";
+import RegisterModal from "@/components/transactions/RegisterModal";
 import API from "@/shared/services/api";
+import { getBudget, getTransactions } from "@/shared/services/homeService";
+import { useAppStore } from "@/shared/store";
+import { UserState } from "@/shared/store/slices/user-slice";
 import { Ionicons } from "@expo/vector-icons";
-
+import { useEffect, useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const USER_ID = 2;
 const USER_NAME = "nombre";
@@ -17,17 +18,16 @@ export default function HomeScreen() {
   const [budget, setBudget] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [weeklyExpense, setWeeklyExpense] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isModalVisible, setModalVisible] = useState(false);
 
+  // state global
+  const { userBalance, setUserBalance, updateUserBalance } = useAppStore() as UserState;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [budgetRes, transactionsRes] = await Promise.all([
-          getBudget(),
-          getTransactions(),
-        ]);
+        const [budgetRes, transactionsRes] = await Promise.all([getBudget(), getTransactions()]);
 
         setBudget(budgetRes);
         setTransactions(transactionsRes);
@@ -38,11 +38,7 @@ export default function HomeScreen() {
 
         const weeklyDebits = transactionsRes.filter((tx: any) => {
           const txDate = new Date(tx.transactionDate);
-          return (
-            tx.transactionType === "Debit" &&
-            txDate >= sevenDaysAgo &&
-            txDate <= today
-          );
+          return tx.transactionType === "Debit" && txDate >= sevenDaysAgo && txDate <= today;
         });
 
         const total = weeklyDebits.reduce((sum: number, tx: any) => sum + tx.amount, 0);
@@ -57,14 +53,7 @@ export default function HomeScreen() {
     fetchData();
   }, []);
 
-
-  const handleSave = async ({
-    amount,
-    description,
-  }: {
-    amount: number;
-    description: string;
-  }) => {
+  const handleSave = async ({ amount, description }: { amount: number; description: string }) => {
     try {
       await API.post("/Transactions", {
         userId: USER_ID,
@@ -92,43 +81,64 @@ export default function HomeScreen() {
     return (
       <View className="p-4">
         <Header fullName={USER_NAME} />
-        <Text className="text-red-600 font-bold">
+        <Text className="font-bold text-red-600">
           Hubo un error cargando los datos financieros.
         </Text>
+        <Text className="2xl">
+          {userBalance && `Tu saldo es ${userBalance.currency} ${userBalance.balance}`}
+        </Text>
+        <TouchableOpacity
+          className="bg-primary-500 px-6 py-4"
+          onPress={() => {
+            setUserBalance({
+              userId: 1,
+              currency: "S/",
+              balance: 1000,
+            });
+          }}
+        >
+          <Text className="text-white">Simular Carga de Datos</Text>
+        </TouchableOpacity>
+        {userBalance && (
+          <TouchableOpacity
+            className="bg-primary-500 px-6 py-4"
+            onPress={() => {
+              updateUserBalance({ userId: 1, currency: "S/", balance: userBalance?.balance + 100 });
+            }}
+          >
+            <Text className="text-white">Actualizar monto</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   }
 
   return (
-    <ScrollView className="pt-6 p-4 bg-background min-h-screen">
+    <ScrollView className="bg-background min-h-screen p-4 pt-6">
       <Header fullName={USER_NAME} />
 
       {/* Tarjetas de resumen */}
-      <View className="flex-row justify-between mb-4">
-        <View className="bg-primary-800 rounded-xl p-4 w-[48%]">
-          <Text className="text-white text-sm">Monto de Dinero</Text>
-          <Text className="text-white text-2xl font-bold mt-1">
-            S/ {budget.budgetLimit}
+      <View className="mb-4 flex-row justify-between">
+        <View className="w-[48%] rounded-xl bg-primary-800 p-4">
+          <Text className="text-sm text-white">Monto de Dinero</Text>
+          <Text className="mt-1 text-2xl font-bold text-white">
+            S/ {userBalance?.balance || budget.budgetLimit}
           </Text>
         </View>
 
-        <View className="bg-secondary-500 rounded-xl p-4 w-[48%]">
-          <Text className="text-white text-sm">Egreso Semanal</Text>
-          <Text className="text-white text-2xl font-bold mt-1">
-            - S/ {weeklyExpense}
-          </Text>
+        <View className="w-[48%] rounded-xl bg-secondary-500 p-4">
+          <Text className="text-sm text-white">Egreso Semanal</Text>
+          <Text className="mt-1 text-2xl font-bold text-white">- S/ {weeklyExpense}</Text>
         </View>
       </View>
 
       {/* Botón de registrar */}
       <TouchableOpacity
-        className="bg-white border border-primary-700 px-6 py-3 rounded-full flex-row items-center justify-center mb-6 shadow-sm"
+        className="mb-6 flex-row items-center justify-center rounded-full border border-primary-700 bg-white px-6 py-3 shadow-sm"
         onPress={() => setModalVisible(true)}
       >
         <Ionicons name="mic-outline" size={22} color="#004E64" />
-        <Text className="ml-2 text-primary-700 font-semibold text-base">
-          Registrar Movimiento
-        </Text>
+        <Text className="ml-2 text-base font-semibold text-primary-700">Registrar Movimiento</Text>
       </TouchableOpacity>
 
       {/* Modal */}
