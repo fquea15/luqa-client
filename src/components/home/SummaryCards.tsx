@@ -11,7 +11,7 @@ export default function SummaryCards({ budget, transactions }: Props) {
     return (
       <View className="p-4 bg-warning-100 rounded-xl mt-2">
         <Text className="text-warning-800 font-semibold">
-          ⚠️ No se encontró presupuesto activo.
+          No se encontró presupuesto activo.
         </Text>
       </View>
     );

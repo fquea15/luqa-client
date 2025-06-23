@@ -9,7 +9,6 @@ import LearningCard from "@/components/home/PointsCard";
 import API from "@/shared/services/api";
 import { Ionicons } from "@expo/vector-icons";
 
-
 const USER_ID = 2;
 const USER_NAME = "nombre";
 
@@ -19,7 +18,6 @@ export default function HomeScreen() {
   const [weeklyExpense, setWeeklyExpense] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,7 +43,10 @@ export default function HomeScreen() {
           );
         });
 
-        const total = weeklyDebits.reduce((sum: number, tx: any) => sum + tx.amount, 0);
+        const total = weeklyDebits.reduce(
+          (sum: number, tx: any) => sum + tx.amount,
+          0
+        );
         setWeeklyExpense(total);
       } catch (err) {
         console.error("No se recibió presupuesto o transacciones válidas:", err);
@@ -56,7 +57,6 @@ export default function HomeScreen() {
 
     fetchData();
   }, []);
-
 
   const handleSave = async ({
     amount,
@@ -80,9 +80,9 @@ export default function HomeScreen() {
       });
 
       alert("Movimiento registrado");
-      setModalVisible(false); // Cerrar modal
+      setModalVisible(false);
     } catch (error) {
-      console.error(" Error al registrar movimiento", error);
+      console.error("Error al registrar movimiento", error);
     }
   };
 
@@ -100,54 +100,63 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView className="pt-6 p-4 bg-background min-h-screen">
-      <Header fullName={USER_NAME} />
+    <ScrollView
+      className="bg-background"
+      contentContainerStyle={{ padding: 16, paddingBottom: 40, flexGrow: 1 }}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View className="flex-1">
+        <Header fullName={USER_NAME} />
 
-      {/* Tarjetas de resumen */}
-      <View className="flex-row justify-between mb-4">
-        <View className="bg-primary-800 rounded-xl p-4 w-[48%]">
-          <Text className="text-white text-sm">Monto de Dinero</Text>
-          <Text className="text-white text-2xl font-bold mt-1">
-            S/ {budget.budgetLimit}
-          </Text>
+        {/* Tarjetas de resumen */}
+        <View className="flex-row justify-between mb-4 mt-4">
+          <View className="bg-primary-800 rounded-xl p-4 w-[48%]">
+            <Text className="text-white text-sm">Monto de Dinero</Text>
+            <Text className="text-white text-2xl font-bold mt-1">
+              S/ {budget.budgetLimit.toFixed(2)}
+            </Text>
+          </View>
+
+          <View className="bg-secondary-500 rounded-xl p-4 w-[48%]">
+            <Text className="text-white text-sm">Egreso Semanal</Text>
+            <Text className="text-white text-2xl font-bold mt-1">
+              - S/ {weeklyExpense.toFixed(2)}
+            </Text>
+          </View>
         </View>
 
-        <View className="bg-secondary-500 rounded-xl p-4 w-[48%]">
-          <Text className="text-white text-sm">Egreso Semanal</Text>
-          <Text className="text-white text-2xl font-bold mt-1">
-            - S/ {weeklyExpense}
+        {/* Botón de registrar */}
+        <TouchableOpacity
+          className="bg-white border border-primary-700 px-6 py-3 rounded-full flex-row items-center justify-center mb-6 shadow-sm"
+          onPress={() => setModalVisible(true)}
+        >
+          <Ionicons name="mic-outline" size={22} color="#004E64" />
+          <Text className="ml-2 text-primary-700 font-semibold text-base">
+            Registrar Movimiento
           </Text>
-        </View>
+        </TouchableOpacity>
+
+        {/* Modal */}
+        <RegisterModal
+          visible={isModalVisible}
+          onClose={() => setModalVisible(false)}
+          onSubmit={handleSave}
+        />
+
+        {/* Distribución 50/30/20 */}
+        <DistributionBox
+          needs={budget.budgetLimit * 0.5}
+          wants={budget.budgetLimit * 0.3}
+          savings={budget.budgetLimit * 0.2}
+        />
+
+        {/* Gráfico de gastos reales */}
+        <ExpenseChart />
+
+        {/* Tarjeta de puntos */}
+        <LearningCard />
       </View>
-
-      {/* Botón de registrar */}
-      <TouchableOpacity
-        className="bg-white border border-primary-700 px-6 py-3 rounded-full flex-row items-center justify-center mb-6 shadow-sm"
-        onPress={() => setModalVisible(true)}
-      >
-        <Ionicons name="mic-outline" size={22} color="#004E64" />
-        <Text className="ml-2 text-primary-700 font-semibold text-base">
-          Registrar Movimiento
-        </Text>
-      </TouchableOpacity>
-
-      {/* Modal */}
-      <RegisterModal
-        visible={isModalVisible}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleSave}
-      />
-
-      {/* Distribución 50/30/20 */}
-      <DistributionBox
-        needs={budget.budgetLimit * 0.5}
-        wants={budget.budgetLimit * 0.3}
-        savings={budget.budgetLimit * 0.2}
-      />
-
-      {/* Gráfico de dona real */}
-      <ExpenseChart />
-      <LearningCard />
     </ScrollView>
   );
 }

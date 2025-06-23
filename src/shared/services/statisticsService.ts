@@ -45,3 +45,16 @@ export const getTransactions = async (userId = USER_ID) => {
   const res = await axios.get(`${API_URL}/Transactions/by-user/${userId}`);
   return res.data;
 };
+
+
+import API from "./api";
+
+export const getUserTransactions = async (userId: number) => {
+  const res = await API.get(`/Transactions/by-user/${userId}`);
+  return res.data;
+};
+
+export const getUserBudgetAllocations = async (userId: number) => {
+  const res = await API.get(`/BudgetAllocations/by-user/${userId}`);
+  return res.data;
+};

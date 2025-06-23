@@ -1,73 +1,37 @@
-import { useEffect, useState } from "react";
+import React from "react";
 import { View, Text } from "react-native";
-import { getBudgetAllocations } from "@/shared/services/statisticsService";
 
-interface BudgetAllocation {
-  allocationId: number;
-  subcategoryName: string;
-  assignedAmount: number;
-  spentAmount: number;
-  categoryType: string; 
+interface Props {
+  allocations: any[];
+  transactions: any[];
 }
 
-export default function CategoryPerformance() {
-  const [allocations, setAllocations] = useState<BudgetAllocation[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchAllocations = async () => {
-      try {
-        const data = await getBudgetAllocations();
-        const filtered = data.filter((item: BudgetAllocation) =>
-          item.categoryType === "Need" || item.categoryType === "Expense"
-        );
-
-        setAllocations(filtered);
-      } catch (err) {
-        setError("Error al obtener asignaciones");
-        console.error("❌ Error al obtener asignaciones:", err);
-      }
-    };
-
-    fetchAllocations();
-  }, []);
-
-  if (error) {
-    return (
-      <View className="mb-6">
-        <Text className="text-danger-500 text-sm">{error}</Text>
-      </View>
-    );
-  }
+export default function CategoryPerformance({ allocations, transactions }: Props) {
+  const categories = ["Saving", "Needs"];
 
   return (
-    <View className="mb-6">
-      <Text className="text-base font-medium text-textPrimary-800 mb-3">
-        Desempeño presupuestal
-      </Text>
+    <View className="mb-4">
+      <Text className="text-lg font-semibold mb-2">Desempeño presupuestal</Text>
+      {categories.map((type) => {
+        const relevantAlloc = allocations.filter((a) => a.subcategory?.type === type);
+        const relevantTx = transactions.filter((t) => {
+          const sub = allocations.find((a) => a.subcategoryId === t.subcategoryId);
+          return sub?.subcategory?.type === type && t.transactionType === "Debit";
+        });
 
-      {allocations.map((item) => {
-        const estado =
-          item.spentAmount >= item.assignedAmount
-            ? "🔴 Excedido"
-            : "🟢 Dentro del presupuesto";
-        const estadoColor =
-          item.spentAmount >= item.assignedAmount
-            ? "text-danger-500"
-            : "text-success-700";
+        const assigned = relevantAlloc.reduce((sum, a) => sum + a.assignedAmount, 0);
+        const spent = relevantTx.reduce((sum, t) => sum + t.amount, 0);
 
         return (
-          <View
-            key={item.allocationId}
-            className="flex-row justify-between mb-2"
-          >
-            <View>
-              <Text className="text-textPrimary-800">{item.subcategoryName}</Text>
-              <Text className={`text-sm ${estadoColor}`}>{estado}</Text>
-            </View>
-            <Text className="text-textPrimary-800">
-              S/ {item.spentAmount.toFixed(2)}
+          <View key={type} className="mb-2">
+            <Text className="text-sm font-semibold mb-1">
+              {type === "Saving" ? "Ahorros" : "Necesidades"}
             </Text>
+            <View className="bg-gray-100 p-2 rounded-xl">
+              <Text className="text-sm text-gray-700">
+                Asignado: S/ {assigned.toFixed(2)} | Gastado: S/ {spent.toFixed(2)}
+              </Text>
+            </View>
           </View>
         );
       })}

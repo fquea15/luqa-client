@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "axios"; 
 import Constants from "expo-constants";
 
 const API_URL = Constants.expoConfig?.extra?.API_URL;
@@ -17,6 +17,19 @@ export const getSubcategories = async () => {
 export const getCategories = async () => {
   const res = await axios.get(`${API_URL}/Categories`);
   return res.data;
+};
+
+// ✅ NUEVA FUNCIÓN para obtener el presupuesto actual (limite total)
+export const getBudgetsByUserId = async (userId = USER_ID) => {
+  const res = await axios.get(`${API_URL}/Budgets/by-user/${userId}`);
+  const budgets = res.data;
+
+  // Buscar el presupuesto que esté "Open"
+  const activeBudget = budgets.find((b: any) => b.status === "Open");
+  return {
+    budgetId: activeBudget?.budgetId,
+    budgetLimit: activeBudget?.budgetLimit || 0,
+  };
 };
 
 type SubcategoryData = {
