@@ -1,10 +1,10 @@
-// src/components/lesson/card-UseLive.tsx
+// ✅ Archivo: src/components/lesson/card-UseLive.tsx
 import axios from "axios";
 import Constants from "expo-constants";
 import { useEffect, useState } from "react";
 
 const API_URL = Constants.expoConfig?.extra?.API_URL;
-const userId = 2; // Usuario fijo por ahora
+const userId = 2; // Por ahora fijo
 
 export const useUserStats = () => {
   const [lives, setLives] = useState<number>(5);
@@ -22,7 +22,7 @@ export const useUserStats = () => {
 
   const addPoints = async (amount: number) => {
     try {
-      await axios.put(`${API_URL}/UserStats/${userId}/add-points`, { points: amount });
+      await axios.put(`${API_URL}/UserStats/${userId}/add-points`, { totalPoints: amount }); // 👈 CAMBIADO
       fetchStats();
     } catch (err) {
       console.error("❌ Error sumando puntos:", err);
@@ -42,5 +42,5 @@ export const useUserStats = () => {
     fetchStats();
   }, []);
 
-  return { lives, points, addPoints, removeLife, fetchStats };
+  return { lives, points, addPoints, removeLife };
 };

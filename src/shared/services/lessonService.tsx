@@ -1,3 +1,4 @@
+// src/shared/services/lessonService.ts
 import API from "./api";
 
 export type Lesson = {
@@ -21,3 +22,4 @@ export const getLessonById = async (id: string): Promise<Lesson> => {
   const response = await API.get(`/Lesson/${id}`);
   return response.data;
 };
+

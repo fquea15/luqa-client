@@ -9,27 +9,26 @@ type Props = {
 
 export default function CardRoute({ ruta }: Props) {
   return (
-    <View className="mb-5 bg-white rounded-3xl p-5 shadow-md flex-row items-center">
-      {/* Ícono al lado izquierdo */}
-      <View className="w-16 h-16 mr-4 justify-center items-center">
+    <View className="mb-6 bg-white rounded-2xl p-5 shadow-md border border-gray-100 flex-row items-center">
+      {/* Imagen del icono sin fondo */}
+      <View className="w-24 h-24 mr-5 justify-center items-center">
         <Image
-          source={require("@/assets/icons/coin.png")}
-          className="w-20 h-12"
+          source={{ uri: ruta.imageUrl }}
+          className="w-20 h-20"
           resizeMode="contain"
         />
       </View>
 
-      {/* Título y descripción */}
+      {/* Contenido: título, descripción y botón */}
       <View className="flex-1">
-        <Text className="text-lg font-bold text-textPrimary-800 mb-1">
+        <Text className="text-lg font-semibold text-primary-800 mb-1">
           {ruta.title}
         </Text>
-        <Text className="text-base text-textSecondary-500 leading-relaxed">
+        <Text className="text-base text-textSecondary-500 leading-snug mb-2">
           {ruta.description}
         </Text>
 
-        {/* Botón */}
-        <View className="flex-row justify-end mt-4">
+        <View className="flex-row justify-end">
           <Link
             href={{
               pathname: "/(root)/(route)/[id]",
@@ -37,8 +36,8 @@ export default function CardRoute({ ruta }: Props) {
             }}
             asChild
           >
-            <TouchableOpacity className="bg-secondary-500 px-4 py-2 rounded-full">
-              <Text className="text-white text-sm font-semibold">Ver cursos</Text>
+            <TouchableOpacity className="bg-secondary-500 px-4 py-2 rounded-xl shadow-sm">
+              <Text className="text-base text-white font-medium">Ver cursos</Text>
             </TouchableOpacity>
           </Link>
         </View>

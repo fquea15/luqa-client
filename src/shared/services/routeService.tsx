@@ -1,11 +1,12 @@
 import API from "./api";
 
 export interface Route {
-  [x: string]: any;
-  id: number;
+  routeId: number;
   title: string;
   description: string;
+  imageUrl: string;
 }
+
 
 export const getRoutes = async (): Promise<Route[]> => {
   console.log("📡 Llamando a /routes desde frontend...");

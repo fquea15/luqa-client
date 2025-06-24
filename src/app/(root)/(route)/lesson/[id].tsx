@@ -1,56 +1,95 @@
 ﻿import LessonPlayer from "@/components/lesson/card-LessonPlayer";
 import QuestionCard from "@/components/lesson/QuestionCard";
-import { getLessonById, Lesson } from "@/shared/services/lessonService";
-import { getQuestionsByLessonId } from "@/shared/services/questionService";
-import axios from "axios";
-import Constants from "expo-constants";
-import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { getLessonById, getLessonsByCourseId, Lesson } from "@/shared/services/lessonService";
+import { updateLessonProgress } from "@/shared/services/progressService";
+import { getQuestionsWithAnswersByLessonId } from "@/shared/services/questionService";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-
-const API_URL = Constants.expoConfig?.extra?.API_URL;
 
 export default function LessonScreen() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showQuestions, setShowQuestions] = useState(false);
+  const [videoReplayKey, setVideoReplayKey] = useState(0);
+
+  const pointsGiven = useRef(false); // 👉 Controla si ya se registró +10 pts
 
   useEffect(() => {
-    console.log("🆔 ID recibido:", id);
-
     if (id) {
       getLessonById(String(id))
-        .then(setLesson)
-        .catch((error) => {
-          console.error("❌ Error cargando lección:", error);
+        .then((lessonData) => {
+          setLesson(lessonData);
+          pointsGiven.current = false;
         })
+        .catch((error) => console.error("❌ Error cargando lección:", error))
         .finally(() => setLoading(false));
     }
   }, [id]);
 
   const handleVideoEnd = async () => {
-    console.log("📺 Video finalizado. Cargando preguntas…");
-
+    if (!lesson) return;
     try {
-      const data = await getQuestionsByLessonId(Number(id));
+      if (!pointsGiven.current) {
+        await updateLessonProgress({
+          lessonId: lesson.lessonId,
+          userId: 2,
+          status: "Completed",
+          isCorrect: null,
+          createdBy: 1,
+          updatedBy: 1,
+        });
+        pointsGiven.current = true;
+        console.log("✅ +10 puntos por ver video");
+      }
 
-      // Enriquecer con respuestas (options)
-      const enrichedQuestions = await Promise.all(
-        data.map(async (q) => {
-          const res = await axios.get(`${API_URL}/Answer/by-question/${q.questionId}`);
-          return {
-            ...q,
-            options: res.data,
-          };
-        })
-      );
-
-      setQuestions(enrichedQuestions);
+      const enriched = await getQuestionsWithAnswersByLessonId(lesson.lessonId);
+      console.log("📡 Obteniendo preguntas con respuestas de la lección:", lesson.lessonId);
+      setQuestions(enriched);
       setShowQuestions(true);
     } catch (error) {
-      console.error("⚠️ Error cargando preguntas/respuestas:", error);
+      console.error("⚠️ Error al finalizar video:", error);
+    }
+  };
+
+  const handleReplay = async () => {
+    if (!lesson) return;
+    setShowQuestions(false);
+    setTimeout(async () => {
+      setVideoReplayKey((prev) => prev + 1);
+      const enriched = await getQuestionsWithAnswersByLessonId(lesson.lessonId);
+      setQuestions(enriched);
+    }, 300);
+  };
+
+  const handleFinish = async () => {
+    if (!lesson?.courseId || !lesson?.orderInCourse) return;
+    try {
+      await updateLessonProgress({
+        lessonId: lesson.lessonId,
+        userId: 2,
+        status: "Completed",
+        isCorrect: true,
+        createdBy: 2,
+        updatedBy: 2,
+      });
+      console.log("✅ Lección registrada como completada");
+
+      const allLessons = await getLessonsByCourseId(lesson.courseId);
+      const nextLesson = allLessons.find(
+        (l) => l.orderInCourse === lesson.orderInCourse + 1
+      );
+
+      if (nextLesson) {
+        router.replace(`/(root)/(route)/lesson/${nextLesson.lessonId}`);
+      } else {
+        router.replace(`/(root)/(route)/lecciones/${lesson.courseId}`);
+      }
+    } catch (error) {
+      console.error("❌ Error al finalizar lección:", error);
     }
   };
 
@@ -72,20 +111,21 @@ export default function LessonScreen() {
   }
 
   return (
-    <View className="flex-1 bg-background-100">
-      {!showQuestions ? (
-        <LessonPlayer
-          title={lesson.title}
-          videoUrl={lesson.videoUrl}
-          onVideoEnd={handleVideoEnd}
-        />
-      ) : questions.length > 0 ? (
-        <QuestionCard questions={questions} lessonId={lesson.lessonId} />
-      ) : (
-        <View className="flex-1 items-center justify-center">
-          <Text className="text-warning-500 font-semibold">
-            No hay preguntas disponibles para esta lección.
-          </Text>
+    <View className="flex-1 bg-background-100 relative">
+      <LessonPlayer
+        key={videoReplayKey}
+        title={lesson.title}
+        videoUrl={lesson.videoUrl}
+        onVideoEnd={handleVideoEnd}
+      />
+      {showQuestions && questions.length > 0 && (
+        <View className="absolute inset-0 z-10 px-4 py-6 bg-black/40">
+          <QuestionCard
+            questions={questions}
+            lessonId={lesson.lessonId}
+            onFinish={handleFinish}
+            onReplay={handleReplay}
+          />
         </View>
       )}
     </View>
