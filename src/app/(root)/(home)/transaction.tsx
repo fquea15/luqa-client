@@ -1,15 +1,14 @@
-﻿import { View, ScrollView, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import CustomButton from "@/components/ui/CustomButton";
-import TransactionSummary from "@/components/transaction/TransactionSummary";
+﻿import RecommendationBox from "@/components/transaction/RecommendationBox";
 import TransactionList from "@/components/transaction/TransactionList";
-import RecommendationBox from "@/components/transaction/RecommendationBox";
-import { useAppStore } from "@/shared/store";
+import TransactionSummary from "@/components/transaction/TransactionSummary";
+import { useBoundStore } from "@/shared/store";
 import { UserState } from "@/shared/store/slices/user-slice";
+import { ScrollView, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const TransactionScreen = () => {
 
-  const { userBalance, updateUserBalance, setUserBalance} = useAppStore() as UserState;
+  const { userBalance, updateUserBalance, setUserBalance} = useBoundStore() as UserState;
 
   return (
     <SafeAreaView className="flex-1 bg-background-100">
