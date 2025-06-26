@@ -4,7 +4,7 @@ import Constants from "expo-constants";
 import { useEffect, useState } from "react";
 
 const API_URL = Constants.expoConfig?.extra?.API_URL;
-const userId = 2; // Por ahora fijo
+const userId = 3; // Por ahora fijo
 
 export const useUserStats = () => {
   const [lives, setLives] = useState<number>(5);
@@ -20,21 +20,15 @@ export const useUserStats = () => {
     }
   };
 
-  const addPoints = async (amount: number) => {
+  const redeemLives = async () => {
     try {
-      await axios.put(`${API_URL}/UserStats/${userId}/add-points`, { totalPoints: amount }); // 👈 CAMBIADO
-      fetchStats();
-    } catch (err) {
-      console.error("❌ Error sumando puntos:", err);
-    }
-  };
-
-  const removeLife = async () => {
-    try {
-      await axios.put(`${API_URL}/UserStats/${userId}/remove-life`);
-      fetchStats();
-    } catch (err) {
-      console.error("❌ Error restando vida:", err);
+      const res = await axios.post(`${API_URL}/UserStats/${userId}/redeem-lives`);
+      console.log("✅ Canje exitoso:", res.data);
+      await fetchStats(); // refrescar stats actualizadas
+      return true;
+    } catch (err: any) {
+      console.error("⚠️ No se pudo canjear vidas:", err?.response?.data || err.message);
+      return false;
     }
   };
 
@@ -42,5 +36,5 @@ export const useUserStats = () => {
     fetchStats();
   }, []);
 
-  return { lives, points, addPoints, removeLife };
+  return { lives, points, fetchStats, redeemLives }; // 👈 AGREGA ESTO
 };

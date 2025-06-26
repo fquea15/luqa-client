@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const USER_ID = 2;
+const USER_ID = 3;
 
 export default function CoursesScreen() {
   const { id } = useLocalSearchParams();

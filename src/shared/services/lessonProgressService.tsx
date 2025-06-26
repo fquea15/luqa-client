@@ -18,3 +18,18 @@ export const getLessonProgressByCourse = async (
   const response = await API.get(`/LessonProgress/course/${courseId}?userId=${userId}`);
   return response.data;
 };
+
+export const createLessonProgress = async (data: {
+  userId: number;
+  lessonId: number;
+  status: string;
+  isCorrect?: boolean;
+  pointsEarned?: number;
+  createdBy: number;
+  updatedBy: number;
+}) => {
+  const response = await API.post("/LessonProgress", data); // ✅ aquí el fix
+  return response.data;
+};
+
+

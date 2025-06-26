@@ -1,95 +1,107 @@
 ﻿import LessonPlayer from "@/components/lesson/card-LessonPlayer";
 import QuestionCard from "@/components/lesson/QuestionCard";
+import API from "@/shared/services/api";
 import { getLessonById, getLessonsByCourseId, Lesson } from "@/shared/services/lessonService";
-import { updateLessonProgress } from "@/shared/services/progressService";
 import { getQuestionsWithAnswersByLessonId } from "@/shared/services/questionService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 
+
 export default function LessonScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+
+  const userId = 3;
   const [lesson, setLesson] = useState<Lesson | null>(null);
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showQuestions, setShowQuestions] = useState(false);
   const [videoReplayKey, setVideoReplayKey] = useState(0);
 
-  const pointsGiven = useRef(false); // 👉 Controla si ya se registró +10 pts
+  const pointsGiven = useRef(false);
 
   useEffect(() => {
     if (id) {
       getLessonById(String(id))
-        .then((lessonData) => {
-          setLesson(lessonData);
-          pointsGiven.current = false;
-        })
-        .catch((error) => console.error("❌ Error cargando lección:", error))
+        .then(setLesson)
+        .catch((error) =>
+          console.error("❌ Error al cargar la lección:", error?.message || error)
+        )
         .finally(() => setLoading(false));
     }
   }, [id]);
 
   const handleVideoEnd = async () => {
-    if (!lesson) return;
-    try {
-      if (!pointsGiven.current) {
-        await updateLessonProgress({
-          lessonId: lesson.lessonId,
-          userId: 2,
-          status: "Completed",
-          isCorrect: null,
-          createdBy: 1,
-          updatedBy: 1,
-        });
-        pointsGiven.current = true;
-        console.log("✅ +10 puntos por ver video");
-      }
+    if (!lesson || pointsGiven.current) return;
+    pointsGiven.current = true;
 
+    try {
       const enriched = await getQuestionsWithAnswersByLessonId(lesson.lessonId);
-      console.log("📡 Obteniendo preguntas con respuestas de la lección:", lesson.lessonId);
       setQuestions(enriched);
       setShowQuestions(true);
-    } catch (error) {
-      console.error("⚠️ Error al finalizar video:", error);
+
+      const payload = {
+        lessonId: lesson.lessonId,
+        userId,
+        status: "Completed",
+        isCorrect: null,
+        createdBy: userId,
+        updatedBy: userId,
+      };
+      await API.post("/LessonProgress", payload);
+    } catch (error: any) {
+      console.error("⚠️ Error al registrar visualización:", error?.response?.data || error.message);
     }
   };
 
-  const handleReplay = async () => {
-    if (!lesson) return;
+  const handleReplay = () => {
     setShowQuestions(false);
-    setTimeout(async () => {
-      setVideoReplayKey((prev) => prev + 1);
-      const enriched = await getQuestionsWithAnswersByLessonId(lesson.lessonId);
-      setQuestions(enriched);
-    }, 300);
+    setVideoReplayKey((prev) => prev + 1);
+    pointsGiven.current = false;
   };
 
-  const handleFinish = async () => {
-    if (!lesson?.courseId || !lesson?.orderInCourse) return;
-    try {
-      await updateLessonProgress({
-        lessonId: lesson.lessonId,
-        userId: 2,
-        status: "Completed",
-        isCorrect: true,
-        createdBy: 2,
-        updatedBy: 2,
-      });
-      console.log("✅ Lección registrada como completada");
+  const handleFinish = async (answeredCorrectly: boolean) => {
+    if (!lesson) return;
 
-      const allLessons = await getLessonsByCourseId(lesson.courseId);
+    const payload = {
+      lessonId: lesson.lessonId,
+      userId,
+      status: "Completed",
+      isCorrect: answeredCorrectly,
+      createdBy: userId,
+      updatedBy: userId,
+    };
+
+    try {
+      await API.post("/LessonProgress", payload);
+
+      const allLessons = await getLessonsByCourseId(String(lesson.courseId));
+      const completedLessons = await Promise.all(
+        allLessons.map(async (l) => {
+          try {
+            const res = await API.get(`/LessonProgress/user/${userId}/lesson/${l.lessonId}`);
+            return res.data?.isCorrect === true;
+          } catch {
+            return false;
+          }
+        })
+      );
+
       const nextLesson = allLessons.find(
         (l) => l.orderInCourse === lesson.orderInCourse + 1
       );
 
-      if (nextLesson) {
-        router.replace(`/(root)/(route)/lesson/${nextLesson.lessonId}`);
-      } else {
-        router.replace(`/(root)/(route)/lecciones/${lesson.courseId}`);
-      }
-    } catch (error) {
-      console.error("❌ Error al finalizar lección:", error);
+      setTimeout(() => {
+        if (nextLesson) {
+          router.replace(`/(root)/(route)/lesson/${nextLesson.lessonId}`);
+        } else {
+          router.replace(`/(root)/(route)/lecciones/${lesson.courseId}`);
+        }
+      }, 100); // ✅ esto evita el error de navegación
+
+    } catch (err: any) {
+      console.error("❌ Error al finalizar la lección:", err?.message || "Error desconocido");
     }
   };
 

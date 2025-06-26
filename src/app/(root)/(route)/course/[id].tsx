@@ -6,7 +6,7 @@ import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 
-const USER_ID = 2; 
+const USER_ID = 3; 
 
 export default function CourseLessonsScreen() {
   const { id } = useLocalSearchParams();

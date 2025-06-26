@@ -1,7 +1,6 @@
 import { FontAwesome } from "@expo/vector-icons";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import { useUserStats } from "./card-UseLive";
 
 interface Props {
   questions: any[];
@@ -15,26 +14,14 @@ export default function QuestionCard({ questions, lessonId, onFinish, onReplay }
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
-  const { addPoints, removeLife } = useUserStats();
 
   const question = questions[currentIndex];
-
-  const answeredCorrectly = useRef<Set<number>>(new Set());
 
   const handleSelect = async (option: any) => {
     setSelectedOptionId(option.answerId);
     setIsCorrect(option.isCorrect);
     setShowFeedback(true);
-
-    try {
-      if (option.isCorrect) {
-        await addPoints(15); // ✅ Siempre se suman puntos ahora
-      } else {
-        await removeLife();
-      }
-    } catch (error) {
-      console.error("❌ Error al actualizar stats:", error);
-    }
+    // ✅ Puntos y vidas ahora solo se gestionan desde el backend
   };
 
   const handleNext = () => {
@@ -131,11 +118,12 @@ export default function QuestionCard({ questions, lessonId, onFinish, onReplay }
                 <Text className="text-primary-500 font-semibold">Volver a ver</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={onFinish}
-                className="bg-secondary-600 px-6 py-3 rounded-full shadow-lg"
-              >
-                <Text className="text-white font-semibold">Siguiente lección</Text>
-              </TouchableOpacity>
+              onPress={() => onFinish?.(!!isCorrect)}
+              className="bg-secondary-600 px-6 py-3 rounded-full shadow-lg"
+            >
+              <Text className="text-white font-semibold">Siguiente lección</Text>
+            </TouchableOpacity>
+
             </View>
           )}
         </View>

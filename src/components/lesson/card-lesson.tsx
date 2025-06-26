@@ -12,9 +12,12 @@ type Props = {
 export default function CardLesson({ lesson, completed, unlocked }: Props) {
   const isPremium = lesson.lessonType === "Premium";
 
+  // Forzamos a bloquear si es premium
+  const isUnlocked = isPremium ? false : unlocked;
+
   const status = completed
     ? { text: "Completado", icon: "checkmark-circle", color: "#10B981" }
-    : unlocked
+    : isUnlocked
     ? { text: "Disponible", icon: "play-circle", color: "#0EA5E9" }
     : { text: "Bloqueado", icon: "lock-closed", color: "#9CA3AF" };
 
@@ -22,7 +25,7 @@ export default function CardLesson({ lesson, completed, unlocked }: Props) {
     ? { text: "Premium", icon: "diamond", color: "#F59E0B" }
     : { text: "Standard", icon: "star", color: "#6376F1" };
 
-  const disabledStyle = unlocked ? "" : "opacity-60";
+  const disabledStyle = isUnlocked ? "" : "opacity-60";
 
   return (
     <Link
@@ -30,7 +33,7 @@ export default function CardLesson({ lesson, completed, unlocked }: Props) {
       asChild
     >
       <Pressable
-        disabled={!unlocked}
+        disabled={!isUnlocked}
         className={`mx-4 mb-5 rounded-2xl bg-white p-4 shadow-md flex-row items-center ${disabledStyle}`}
       >
         {/* Icono */}
@@ -61,3 +64,4 @@ export default function CardLesson({ lesson, completed, unlocked }: Props) {
     </Link>
   );
 }
+
