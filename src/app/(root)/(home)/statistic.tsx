@@ -1,70 +1,65 @@
 ﻿import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
-import {
-  getUserTransactions,
-  getUserBudgetAllocations,
-} from "@/shared/services/statisticsService";
 import MonthlySummary from "@/components/statistics/MonthlySummary";
 import ProgressBar from "@/components/statistics/ProgressBar";
 import CategoryPerformance from "@/components/statistics/CategoryPerformance";
 import TrendChart from "@/components/statistics/TrendChart";
+import {
+  getUserBudget,
+  getTransactions,
+  getBudgetAllocations,
+  getCategories,
+} from "@/shared/services/statisticsService";
 
-const USER_ID = 2;
-
-export default function StatisticsScreen() {
+export default function StatisticScreen() {
+  const [balance, setBalance] = useState<any | null>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [allocations, setAllocations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<any[]>([]);
 
   useEffect(() => {
-    const loadData = async () => {
+    const fetchData = async () => {
       try {
-        const [txRes, allocRes] = await Promise.all([
-          getUserTransactions(USER_ID),
-          getUserBudgetAllocations(USER_ID),
-        ]);
+        const b = await getUserBudget();
+        const t = await getTransactions();
+        const a = await getBudgetAllocations();
+        const c = await getCategories();
 
-        setTransactions(txRes);
-        setAllocations(allocRes);
+        // ✅ Logs para depuración
+        console.log("📊 Presupuesto:", b);
+        console.log("📊 Transacciones:", t);
+        console.log("📊 Asignaciones:", a);
+        console.log("📊 Categorías:", c);
+
+        setBalance({
+          totalIncome: b?.budgetLimit || 0,
+          totalExpenses: t
+            .filter((tx: any) => tx.transactionType === "Debit")
+            .reduce((sum: number, tx: any) => sum + tx.amount, 0),
+          totalSavings: 0, // ✅ corregido temporalmente
+          balance:
+            b?.budgetLimit -
+            t.filter((tx: any) => tx.transactionType === "Debit")
+              .reduce((sum: number, tx: any) => sum + tx.amount, 0),
+        });
+
+        setTransactions(t);
+        setAllocations(a);
+        setCategories(c);
       } catch (error) {
-        console.error("Error cargando estadísticas", error);
-      } finally {
-        setLoading(false);
+        console.error("Error cargando estadísticas:", error);
       }
     };
 
-    loadData();
+    fetchData();
   }, []);
 
-  if (loading) return <Text className="p-4">Cargando estadísticas...</Text>;
-
-  const monthlyExpenses = transactions
-    .filter((tx) => tx.transactionType === "Debit")
-    .reduce((sum, tx) => sum + tx.amount, 0);
-
-  const monthlyIncomes = transactions
-    .filter((tx) => tx.transactionType === "Credit")
-    .reduce((sum, tx) => sum + tx.amount, 0);
-
-  const budgetedAmount = allocations.reduce((sum, a) => sum + a.assignedAmount, 0);
-  const progress = (monthlyExpenses / budgetedAmount) * 100 || 0;
-
   return (
-    <ScrollView className="bg-background" contentContainerStyle={{ padding: 16 }}>
-      <MonthlySummary
-        incomes={monthlyIncomes}
-        expenses={monthlyExpenses}
-        balance={monthlyIncomes - monthlyExpenses}
-      />
-
-      <ProgressBar
-        progressPercentage={Math.round(progress)}
-        total={budgetedAmount}
-        spent={monthlyExpenses}
-      />
-
-      <CategoryPerformance allocations={allocations} transactions={transactions} />
-
+    <ScrollView className="flex-1 bg-background px-4 py-6">
+      <Text className="text-2xl font-bold text-primary mb-4">Resumen del Mes</Text>
+      {balance && <MonthlySummary balance={balance} />}
+      <ProgressBar allocations={allocations} />
+      <CategoryPerformance transactions={transactions} categories={categories} />
       <TrendChart transactions={transactions} />
     </ScrollView>
   );

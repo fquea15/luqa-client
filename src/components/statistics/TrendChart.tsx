@@ -1,62 +1,75 @@
+import React from "react";
 import { View, Text } from "react-native";
 import { LineChart } from "react-native-chart-kit";
+import { Dimensions } from "react-native";
 
 interface Transaction {
-  transactionDate: string;
+  transactionType: "Debit" | "Credit";
   amount: number;
-  transactionType: string; // "Income" o "Debit"
+  transactionDate: string;
 }
 
-interface TrendChartProps {
+interface Props {
   transactions: Transaction[];
 }
 
-export default function TrendChart({ transactions }: TrendChartProps) {
-  // Agrupa datos por fecha
-  const datesMap: Record<string, { ingresos: number; gastos: number }> = {};
+const screenWidth = Dimensions.get("window").width;
 
-  transactions.forEach((t) => {
-    const date = t.transactionDate.split("T")[0];
-    if (!datesMap[date]) {
-      datesMap[date] = { ingresos: 0, gastos: 0 };
-    }
+export default function TrendChart({ transactions }: Props) {
+  // Filtrar transacciones tipo Debit y agrupar por fecha (formato YYYY-MM-DD)
+  const debitTxs = transactions.filter((tx) => tx.transactionType === "Debit");
+  const grouped: Record<string, number> = {};
 
-    if (t.transactionType === "Income") {
-      datesMap[date].ingresos += t.amount;
-    } else {
-      datesMap[date].gastos += t.amount;
-    }
+  debitTxs.forEach((tx) => {
+    const date = tx.transactionDate.slice(0, 10); // YYYY-MM-DD
+    grouped[date] = (grouped[date] || 0) + tx.amount;
   });
 
-  const labels = Object.keys(datesMap);
-  const ingresos = labels.map((d) => datesMap[d].ingresos);
-  const gastos = labels.map((d) => datesMap[d].gastos);
+  const labels = Object.keys(grouped);
+  const data = Object.values(grouped);
+
+  if (labels.length === 0) {
+    return (
+      <View className="mb-4 p-4 rounded-xl bg-white shadow-sm">
+        <Text className="text-lg font-bold text-primary mb-2">Tendencia semanal</Text>
+        <Text className="text-textSecondary">No hay datos válidos para mostrar.</Text>
+      </View>
+    );
+  }
 
   return (
-    <View className="bg-white rounded-2xl p-4 shadow">
-      <Text className="text-base font-semibold text-textPrimary-800 mb-2">
-        Tendencia del Mes
-      </Text>
+    <View className="mb-4 p-4 rounded-xl bg-white shadow-sm">
+      <Text className="text-lg font-bold text-primary mb-2">Tendencia semanal</Text>
       <LineChart
         data={{
           labels,
           datasets: [
-            { data: ingresos, color: () => "#26C6DA", strokeWidth: 2 },
-            { data: gastos, color: () => "#EF5350", strokeWidth: 2 },
+            {
+              data,
+            },
           ],
-          legend: ["Ingresos", "Gastos"],
         }}
-        width={320}
+        width={screenWidth - 40}
         height={220}
+        yAxisSuffix=" S/"
         chartConfig={{
-          backgroundGradientFrom: "#fff",
-          backgroundGradientTo: "#fff",
+          backgroundColor: "#ffffff",
+          backgroundGradientFrom: "#ffffff",
+          backgroundGradientTo: "#ffffff",
           decimalPlaces: 2,
-          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          labelColor: () => "#999",
+          color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+          labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+          style: {
+            borderRadius: 16,
+          },
+          propsForDots: {
+            r: "4",
+            strokeWidth: "2",
+            stroke: "#007aff",
+          },
         }}
         bezier
-        style={{ borderRadius: 12 }}
+        style={{ borderRadius: 16 }}
       />
     </View>
   );

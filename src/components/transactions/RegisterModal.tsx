@@ -1,6 +1,14 @@
-import React, { useState } from "react";
-import { Modal, View, Text, TextInput, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  Modal,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { getUserSubcategories } from "@/shared/services/subcategoryService";
 
 type Props = {
   visible: boolean;
@@ -9,6 +17,7 @@ type Props = {
     amount: number;
     description: string;
     transactionType: "Debit" | "Credit";
+    subcategoryId?: number;
   }) => void;
 };
 
@@ -17,26 +26,53 @@ export default function RegisterModal({ visible, onClose, onSubmit }: Props) {
   const [description, setDescription] = useState("");
   const [transactionType, setTransactionType] =
     useState<"Debit" | "Credit">("Debit");
+  const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
+  const [subcategories, setSubcategories] = useState([]);
+
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      try {
+        const data = await getUserSubcategories();
+        setSubcategories(data);
+        if (data.length > 0) setSubcategoryId(data[0].subcategoryId);
+      } catch (error) {
+        console.error("Error al cargar subcategorías:", error);
+      }
+    };
+
+    if (visible && transactionType === "Debit") {
+      fetchSubcategories();
+    }
+  }, [visible, transactionType]);
 
   const handleSave = () => {
     const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || !description.trim()) {
-      alert("Por favor ingresa un monto y una descripción válida.");
+    if (
+      isNaN(parsedAmount) ||
+      !description.trim() ||
+      (transactionType === "Debit" && !subcategoryId)
+    ) {
+      alert("Completa todos los campos.");
       return;
     }
 
-    onSubmit({ amount: parsedAmount, description, transactionType });
+    onSubmit({
+      amount: parsedAmount,
+      description,
+      transactionType,
+      subcategoryId: transactionType === "Debit" ? subcategoryId! : undefined,
+    });
 
-    // Reset
     setAmount("");
     setDescription("");
     setTransactionType("Debit");
-    onClose(); 
+    setSubcategoryId(null);
+    onClose();
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide">
-      <View className="flex-1 items-center justify-center bg-black bg-opacity-40 px-4">
+      <View className="flex-1 items-center justify-center bg-black/80 px-4">
         <View className="w-full rounded-3xl bg-white p-6">
           <Text className="mb-4 text-lg font-semibold text-primary-700 text-center">
             Registrar Movimiento
@@ -57,6 +93,37 @@ export default function RegisterModal({ visible, onClose, onSubmit }: Props) {
             className="mb-3 rounded-lg border border-gray-300 px-4 py-2 text-base text-gray-800"
           />
 
+          {transactionType === "Debit" && (
+            <ScrollView
+              horizontal
+              className="mb-3"
+              contentContainerStyle={{ gap: 8 }}
+              showsHorizontalScrollIndicator={false}
+            >
+              {subcategories.map((sub: any) => (
+                <TouchableOpacity
+                  key={sub.subcategoryId}
+                  onPress={() => setSubcategoryId(sub.subcategoryId)}
+                  className={`rounded-full px-4 py-2 ${
+                    subcategoryId === sub.subcategoryId
+                      ? "bg-primary-800"
+                      : "bg-gray-200"
+                  }`}
+                >
+                  <Text
+                    className={`text-sm font-semibold ${
+                      subcategoryId === sub.subcategoryId
+                        ? "text-white"
+                        : "text-gray-800"
+                    }`}
+                  >
+                    {sub.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+
           <View className="mb-4 flex-row justify-around">
             <TouchableOpacity
               onPress={() => setTransactionType("Debit")}
@@ -70,7 +137,9 @@ export default function RegisterModal({ visible, onClose, onSubmit }: Props) {
             <TouchableOpacity
               onPress={() => setTransactionType("Credit")}
               className={`rounded-full px-4 py-2 ${
-                transactionType === "Credit" ? "bg-success-600" : "bg-gray-300"
+                transactionType === "Credit"
+                  ? "bg-success-600"
+                  : "bg-gray-300"
               }`}
             >
               <Text className="text-white font-semibold">Ingreso</Text>

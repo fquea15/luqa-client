@@ -1,40 +1,76 @@
 import React from "react";
 import { View, Text } from "react-native";
+import { ProgressBar } from "react-native-paper";
 
-interface Props {
-  allocations: any[];
-  transactions: any[];
+interface Category {
+  categoryId: number;
+  name: string;
+  type: "Expense" | "Savings";
 }
 
-export default function CategoryPerformance({ allocations, transactions }: Props) {
-  const categories = ["Saving", "Needs"];
+interface Transaction {
+  transactionType: "Debit" | "Credit";
+  amount: number;
+  subcategoryId: number;
+}
+
+interface Props {
+  transactions: Transaction[];
+  categories: Category[];
+}
+
+export default function CategoryPerformance({ transactions, categories }: Props) {
+  const subcategoryMap: Record<number, number> = {
+    1: 1,
+    2: 1,
+    3: 2,
+    4: 2,
+    5: 3,
+  };
+
+  const debitTxs = transactions.filter((t) => t.transactionType === "Debit");
+
+  const grouped = categories
+    .map((cat) => {
+      const total = debitTxs
+        .filter((tx) => subcategoryMap[tx.subcategoryId] === cat.categoryId)
+        .reduce((sum, tx) => sum + tx.amount, 0);
+      return { name: cat.name, type: cat.type, total };
+    })
+    .filter((c) => c.total > 0);
+
+  const maxValue = Math.max(...grouped.map((g) => g.total), 1); // evitar división por cero
+
+  const getColor = (index: number) => {
+    const colors = ["#FF6B6B", "#FFD93D", "#6BCB77"];
+    return colors[index % colors.length];
+  };
 
   return (
-    <View className="mb-4">
-      <Text className="text-lg font-semibold mb-2">Desempeño presupuestal</Text>
-      {categories.map((type) => {
-        const relevantAlloc = allocations.filter((a) => a.subcategory?.type === type);
-        const relevantTx = transactions.filter((t) => {
-          const sub = allocations.find((a) => a.subcategoryId === t.subcategoryId);
-          return sub?.subcategory?.type === type && t.transactionType === "Debit";
-        });
+    <View className="bg-white rounded-2xl shadow-sm p-4 mb-6">
+      <Text className="text-lg font-bold text-primary mb-4">
+        Desempeño por categoría
+      </Text>
 
-        const assigned = relevantAlloc.reduce((sum, a) => sum + a.assignedAmount, 0);
-        const spent = relevantTx.reduce((sum, t) => sum + t.amount, 0);
-
-        return (
-          <View key={type} className="mb-2">
-            <Text className="text-sm font-semibold mb-1">
-              {type === "Saving" ? "Ahorros" : "Necesidades"}
-            </Text>
-            <View className="bg-gray-100 p-2 rounded-xl">
-              <Text className="text-sm text-gray-700">
-                Asignado: S/ {assigned.toFixed(2)} | Gastado: S/ {spent.toFixed(2)}
+      {grouped.length === 0 ? (
+        <Text className="text-textSecondary">No hay datos suficientes.</Text>
+      ) : (
+        grouped.map((item, idx) => (
+          <View key={idx} className="mb-5">
+            <View className="flex-row justify-between mb-1 px-1">
+              <Text className="text-textPrimary">{item.name}</Text>
+              <Text className="text-textSecondary font-semibold">
+                S/ {item.total.toFixed(2)}
               </Text>
             </View>
+            <ProgressBar
+              progress={item.total / maxValue}
+              color={getColor(idx)}
+              style={{ height: 10, borderRadius: 8 }}
+            />
           </View>
-        );
-      })}
+        ))
+      )}
     </View>
   );
 }
