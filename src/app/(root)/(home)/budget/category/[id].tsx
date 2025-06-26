@@ -47,7 +47,7 @@ export default function BudgetOverview() {
         const allCats = await getAllCategoriesWithSubcategories(budgetData.budgetId);
         setCategories(allCats);
       } catch (e) {
-        Alert.alert("Error", "No se pudieron cargar los datos");
+        Alert.alert("Error", "No tienes un presupuesto definido para este mes");
       } finally {
         setLoading(false);
       }
@@ -167,8 +167,8 @@ export default function BudgetOverview() {
       </Text>
       <TextInput
         keyboardType="numeric"
-        value={budget?.budgetLimit?.toString() || ""}
-        onChangeText={handleBudgetChange}
+        value={budget?.budgetLimit?.toString()}
+        onChangeText={text => handleBudgetChange(text)}
         className="bg-background-50 border border-primary-200 text-textPrimary-800 px-4 py-3 rounded-xl"
         placeholder="Ej. 800"
         placeholderTextColor="#9AA5B1"
