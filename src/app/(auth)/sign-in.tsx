@@ -7,8 +7,10 @@ import { Link, useRouter } from "expo-router";
 import { LockIcon, MailIcon } from "lucide-react-native";
 import { useState } from "react";
 import { Image, ScrollView, Text, View } from "react-native";
+import { useAppStore } from "@/shared/store";
+import { UserState } from "@/shared/store/slices/user-slice";
 
-console.log(process.env.EXPO_PUBLIC_API_URL)
+console.log(process.env.EXPO_PUBLIC_API_URL);
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -16,30 +18,35 @@ export default function HomeScreen() {
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
+  const { setUserInfo } = useAppStore() as UserState;
+
   async function handleLogin() {
-    if (!form.email || !form.password) {
+    const { email, password } = form;
+
+    if (!email || !password) {
       alert("Completa ambos campos");
       return;
     }
 
     try {
-      const token = await loginUser({
-        email: form.email,
-        password: form.password,
-      });
+      setLoading(true);
+      const response = await loginUser({ email, password });
 
-      await AsyncStorage.setItem("token", token);
-      console.log("TOKEN GUARDADO:", token);
+      if (!response?.token && !response?.user) {
+        alert("No se pudo iniciar sesión");
+        return;
+      }
 
+      setUserInfo(response?.user);
+      await AsyncStorage.setItem("token", response.token);
       router.replace("/home");
     } catch (error: any) {
-      console.log("Login error:", error);
-      if (error.response) {
-        console.log("Response data:", error.response.data);
-        alert(error.response.data.message || "Error del servidor");
-      } else {
-        alert("No se pudo conectar al servidor");
-      }
+      console.error("Login error:", error);
+      const message = error?.response?.data?.message || "No se pudo conectar al servidor";
+      alert(message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -72,10 +79,13 @@ export default function HomeScreen() {
             containerStyle={"rounded-[10px] "}
             inputStyle={"placeholder:text-textSecondary-400"}
           />
-
         </View>
         <View className={"mt-8 flex-1 flex-col gap-6"}>
-          <CustomButton title={"Iniciar Sesión"} onPress={handleLogin} />
+          <CustomButton
+            title={loading ? "Iniciando..." : "Iniciar Sesión"}
+            onPress={handleLogin}
+            disabled={loading}
+          />
           <CustomButton
             title="Registrarse"
             bgVariant="secondary"

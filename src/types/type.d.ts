@@ -23,3 +23,10 @@ declare interface InputFieldProps extends TextInputProps {
   className?: string;
   medium?: boolean;
 }
+
+export type RootDrawerParamList = {
+  "(tabs)": undefined;
+  "(route)": undefined;
+  "(home)": undefined;
+  profile: undefined;
+};
