@@ -38,10 +38,7 @@ class ApiService {
     this.api.interceptors.request.use(
       async (config) => {
         try {
-          let token = await AsyncStorage.getItem('authToken');
-          if (!token) {
-            token = process.env.EXPO_PUBLIC_API_TOKEN || ""; // Usa el token del .env si no hay en AsyncStorage
-          }
+          let token = await AsyncStorage.getItem('token');
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           }
