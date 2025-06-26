@@ -1,48 +1,64 @@
-import CustomButton from '@/components/ui/CustomButton';
-import InputField from '@/components/ui/InputField';
-import { images } from '@/constants';
+import CustomButton from "@/components/ui/CustomButton";
+import InputField from "@/components/ui/InputField";
+import { images } from "@/constants";
 import { registerUser } from "@/shared/services/authService";
-import { useRouter } from 'expo-router';
-import { LockIcon, MailIcon, UserIcon } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { Alert, Image, ScrollView, Text, View } from 'react-native';
+import { useRouter } from "expo-router";
+import { LockIcon, MailIcon, UserIcon } from "lucide-react-native";
+import React, { useState } from "react";
+import { Alert, Image, ScrollView, Text, View } from "react-native";
 
-console.log(process.env.EXPO_PUBLIC_API_URL)
-
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function SignUpScreen() {
   const router = useRouter();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [loading, setLoading] = useState(false);
 
-  async function handleRegister() {
+  const handleChange = (key: keyof typeof form, value: string) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleRegister = async () => {
+    const { name, email, password, confirmPassword } = form;
+
+    // 🔎 Validaciones
     if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Por favor, completa todos los campos.');
-      return;
+      return Alert.alert("Error", "Por favor, completa todos los campos.");
+    }
+    if (!emailRegex.test(email)) {
+      return Alert.alert("Error", "Por favor, ingresa un correo válido.");
+    }
+    if (password.length < 6) {
+      return Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres.");
     }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden.');
-      return;
+      return Alert.alert("Error", "Las contraseñas no coinciden.");
     }
+
     setLoading(true);
     try {
       await registerUser({
         fullName: name,
         email,
         password,
-        profilePicture: "image.png",
       });
-      Alert.alert('Éxito', 'Registro completado. Ahora inicia sesión.');
-      router.push('/(auth)/sign-in');
+
+      Alert.alert("¡Éxito!", "Registro completado. Ahora inicia sesión.");
+      router.replace("/(auth)/sign-in");
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Error en el registro');
+      console.error("Error en registro:", error);
+      const message =
+        error?.response?.data?.message || error.message || "Error desconocido en el registro.";
+      Alert.alert("Error", message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <ScrollView className="flex-1 bg-neutral-50">
@@ -58,16 +74,16 @@ export default function SignUpScreen() {
           <InputField
             placeholder="Nombre completo"
             icon={UserIcon}
-            value={name}
-            onChangeText={setName}
+            value={form.name}
+            onChangeText={text => handleChange("name", text)}
             containerStyle={"rounded-[10px] "}
             inputStyle={"placeholder:text-textSecondary-400"}
           />
           <InputField
             placeholder="Correo electrónico"
             icon={MailIcon}
-            value={email}
-            onChangeText={setEmail}
+            value={form.email}
+            onChangeText={text => handleChange("email", text)}
             containerStyle={"rounded-[10px] "}
             inputStyle={"placeholder:text-textSecondary-400"}
           />
@@ -75,8 +91,8 @@ export default function SignUpScreen() {
             placeholder="Contraseña"
             icon={LockIcon}
             secureTextEntry
-            value={password}
-            onChangeText={setPassword}
+            value={form.password}
+            onChangeText={text => handleChange("password", text)}
             containerStyle={"rounded-[10px] "}
             inputStyle={"placeholder:text-textSecondary-400"}
           />
@@ -84,8 +100,8 @@ export default function SignUpScreen() {
             placeholder="Repite la contraseña"
             icon={LockIcon}
             secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            value={form.confirmPassword}
+            onChangeText={text => handleChange("confirmPassword", text)}
             medium
             containerStyle={"rounded-[10px] "}
             inputStyle={"placeholder:text-textSecondary-400"}
@@ -94,17 +110,17 @@ export default function SignUpScreen() {
 
         <View className="mt-10 flex-1 flex-col gap-6">
           <CustomButton
-            title={loading ? 'Registrando...' : 'Registrarse'}
+            title={loading ? "Registrando..." : "Registrarse"}
             onPress={handleRegister}
             disabled={loading}
             bgVariant="secondary"
           />
 
           <Text className="mt-10 text-center text-base text-textSecondary-500">
-            ¿Tienes una cuenta?{' '}
+            ¿Tienes una cuenta?{" "}
             <Text
-              onPress={() => router.push('/(auth)/sign-in')}
-              className="text-primary-500 font-semibold"
+              onPress={() => router.replace("/(auth)/sign-in")}
+              className="font-semibold text-primary-500"
             >
               Inicia Sesión
             </Text>
