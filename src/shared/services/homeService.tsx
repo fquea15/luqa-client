@@ -1,5 +1,5 @@
 // src/shared/services/homeService.ts
-import API from "./api";
+import API from "./routeService";
 
 const userId = 2;
 

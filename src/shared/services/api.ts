@@ -1,22 +1,6 @@
-// src/shared/services/api.ts
-/*import axios from "axios";
-import Constants from "expo-constants";
-
-const baseURL = Constants.expoConfig?.extra?.API_URL;
-console.log("👉 URL base:", baseURL);
-
-const API = axios.create({
-  baseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-export default API;*/
-
 // shared/services/api.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosResponse } from "axios";
 
 class ApiService {
   private api: AxiosInstance;
@@ -64,17 +48,6 @@ class ApiService {
     );
   }
 
-  // User data methods
-  public getCurrentUserId(): string { 
-    // Usa variable de entorno o valor fijo
-    return process.env.EXPO_PUBLIC_USER_ID || "6";
-  }
-
-  public getCurrentUserName(): string {
-    return process.env.EXPO_PUBLIC_USER_NAME || "ksksa";  
-  }
-  
-  // Internal method to get axios instance for HTTP operations
   public getAxiosInstance(): AxiosInstance {
     return this.api;
   }
