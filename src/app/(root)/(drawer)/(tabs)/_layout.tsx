@@ -21,9 +21,9 @@ const Layout = () => (
     />
 
     <Tabs.Screen
-      name={"profile"}
+      name={"chat-ia"}
       options={{
-        title: "Perfil",
+        title: "Chat IA",
       }}
     />
 
