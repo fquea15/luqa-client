@@ -26,12 +26,13 @@ import {
   CreditCard,
   Tag,
   MessageCircle,
-  Settings,
+  Settings, BarChart2Icon,
 } from "lucide-react-native";
 import { useColorScheme } from "nativewind";
 import { useAppStore } from "@/shared/store";
 import { UserState } from "@/shared/store/slices/user-slice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BarChart } from "react-native-gifted-charts";
 
 interface DrawerItem {
   id: string;
@@ -102,7 +103,13 @@ const drawerItems: DrawerItem[] = [
         id: "categories",
         title: "Categorías",
         icon: Tag,
-        route: "/(root)/(home)/budget/category/[id]",
+        route: "/(root)/(home)/budget/category/2",
+      },
+      {
+        id: "statistic",
+        title: "Estadísticas",
+        icon: BarChart2Icon,
+        route: "/(root)/(home)/statistic",
       },
     ],
   },
