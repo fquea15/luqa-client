@@ -26,6 +26,14 @@ const Layout = () => (
         title: "Perfil",
       }}
     />
+
+    <Tabs.Screen
+      name={"community"}
+      options={{
+        title: "Comunidades",
+      }}
+    />
+
   </Tabs>
 );
 
