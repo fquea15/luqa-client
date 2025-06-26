@@ -1,7 +1,7 @@
 // src/shared/services/homeService.ts
 import API from "./routeService";
 
-const userId = 2;
+const userId = 1;
 
 export const getBudget = async () => {
   const res = await API.get(`/Budgets/by-user/${userId}`);
@@ -29,7 +29,17 @@ export const getTransactionsWithCategory = async (userId: number) => {
 };
 
 export const getRecommendation = async (userId: number) => {
-  console.log("🧠 getRecommendation ejecutándose");
+  console.log(" getRecommendation ejecutándose");
   const res = await API.get(`/Recommendations/${userId}`);
   return res.data;
+};
+
+export const createTransaction = async (data: {
+  amount: number;
+  description: string;
+  transactionType: "Debit" | "Credit";
+  userId: number;
+}) => {
+  const response = await API.post("/Transactions", data);
+  return response.data;
 };

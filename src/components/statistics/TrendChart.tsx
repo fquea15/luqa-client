@@ -1,109 +1,75 @@
-import { useEffect, useState } from "react";
-import { Dimensions, View, Text } from "react-native";
+import React from "react";
+import { View, Text } from "react-native";
 import { LineChart } from "react-native-chart-kit";
-import { getTransactions } from "@/shared/services/statisticsService";
+import { Dimensions } from "react-native";
+
+interface Transaction {
+  transactionType: "Debit" | "Credit";
+  amount: number;
+  transactionDate: string;
+}
+
+interface Props {
+  transactions: Transaction[];
+}
 
 const screenWidth = Dimensions.get("window").width;
 
-export default function TrendChart() {
-  const [labels, setLabels] = useState<string[]>([]);
-  const [incomeData, setIncomeData] = useState<number[]>([]);
-  const [expenseData, setExpenseData] = useState<number[]>([]);
+export default function TrendChart({ transactions }: Props) {
+  // Filtrar transacciones tipo Debit y agrupar por fecha (formato YYYY-MM-DD)
+  const debitTxs = transactions.filter((tx) => tx.transactionType === "Debit");
+  const grouped: Record<string, number> = {};
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const txs = await getTransactions();
+  debitTxs.forEach((tx) => {
+    const date = tx.transactionDate.slice(0, 10); // YYYY-MM-DD
+    grouped[date] = (grouped[date] || 0) + tx.amount;
+  });
 
-        const grouped: Record<string, { income: number; expense: number }> = {};
+  const labels = Object.keys(grouped);
+  const data = Object.values(grouped);
 
-        txs.forEach((t: any) => {
-          const date = new Date(t.transactionDate).toLocaleDateString("es-PE", {
-            day: "2-digit",
-            month: "short",
-          });
-
-          if (!grouped[date]) grouped[date] = { income: 0, expense: 0 };
-
-          if (t.transactionType === "Credit") grouped[date].income += t.amount;
-          if (t.transactionType === "Debit") grouped[date].expense += t.amount;
-        });
-
-        const sortedDates = Object.keys(grouped).sort((a, b) =>
-          new Date(a).getTime() - new Date(b).getTime()
-        );
-
-        const incomes = sortedDates.map((d) => grouped[d].income);
-        const expenses = sortedDates.map((d) => grouped[d].expense);
-
-        setLabels(sortedDates);
-        setIncomeData(incomes);
-        setExpenseData(expenses);
-      } catch (error) {
-        console.error("❌ Error al obtener datos de tendencia:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (!labels.length || !incomeData.length || !expenseData.length) {
+  if (labels.length === 0) {
     return (
-      <View className="mb-6">
-        <Text className="text-sm text-textSecondary-500">No hay datos suficientes para mostrar el gráfico.</Text>
+      <View className="mb-4 p-4 rounded-xl bg-white shadow-sm">
+        <Text className="text-lg font-bold text-primary mb-2">Tendencia semanal</Text>
+        <Text className="text-textSecondary">No hay datos válidos para mostrar.</Text>
       </View>
     );
   }
 
   return (
-    <View className="mb-10">
-      <Text className="text-lg font-bold text-textPrimary-800 mb-4">Tendencia del Mes</Text>
-
+    <View className="mb-4 p-4 rounded-xl bg-white shadow-sm">
+      <Text className="text-lg font-bold text-primary mb-2">Tendencia semanal</Text>
       <LineChart
         data={{
           labels,
           datasets: [
             {
-              data: incomeData,
-              color: () => "#4DB0C2", 
-              strokeWidth: 2,
-            },
-            {
-              data: expenseData,
-              color: () => "#E53935", 
-              strokeWidth: 2,
+              data,
             },
           ],
-          legend: ["Ingresos", "Gastos"],
         }}
-        width={screenWidth - 24}
-        height={250}
-        withShadow={true}
-        withInnerLines={false}
-        withOuterLines={false}
-        withVerticalLabels={true}
-        withHorizontalLabels={true}
-        bezier
+        width={screenWidth - 40}
+        height={220}
+        yAxisSuffix=" S/"
         chartConfig={{
-          backgroundColor: "#FFFFFF",
-          backgroundGradientFrom: "#FFFFFF",
-          backgroundGradientTo: "#FFFFFF",
-          decimalPlaces: 0,
-          color: () => "#1A1A1A",
-          labelColor: () => "#5F6C7B",
+          backgroundColor: "#ffffff",
+          backgroundGradientFrom: "#ffffff",
+          backgroundGradientTo: "#ffffff",
+          decimalPlaces: 2,
+          color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+          labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+          style: {
+            borderRadius: 16,
+          },
           propsForDots: {
             r: "4",
             strokeWidth: "2",
-            stroke: "#ffffff",
-          },
-          propsForLabels: {
-            fontWeight: "600",
+            stroke: "#007aff",
           },
         }}
-        style={{
-          marginVertical: 8,
-          borderRadius: 20,
-        }}
+        bezier
+        style={{ borderRadius: 16 }}
       />
     </View>
   );

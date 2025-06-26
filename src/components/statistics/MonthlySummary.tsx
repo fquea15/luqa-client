@@ -1,47 +1,41 @@
+// src/components/statistics/MonthlySummary.tsx
+import React from "react";
 import { View, Text } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
-import { getMonthlySummaryReal } from "@/shared/services/statisticsService";
 
-export default function MonthlySummary() {
-  const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 });
+interface Props {
+  balance: {
+    totalIncome: number;
+    totalExpenses: number;
+    totalSavings: number;
+    balance: number;
+  };
+}
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const res = await getMonthlySummaryReal();
-        setSummary(res);
-      } catch (err) {
-        console.error("❌ Error al cargar resumen mensual:", err);
-      }
-    };
-    fetch();
-  }, []);
+export default function MonthlySummary({ balance }: Props) {
+  if (!balance) return null;
 
   return (
-    <View className="bg-white rounded-2xl p-6 shadow mb-6">
-      <Text className="text-center text-lg font-semibold text-textPrimary-800 mb-4">
-        Resumen del mes
-      </Text>
+    <View className="mb-4 p-4 rounded-xl bg-white shadow-md space-y-3">
+      <Text className="text-lg font-bold text-primary">Resumen del mes</Text>
 
       <View className="flex-row justify-between">
-        <View className="items-center w-[30%]">
-          <Ionicons name="arrow-up-circle" size={28} color="#4CAF50" />
-          <Text className="text-sm text-textSecondary-500 mt-1">Ingresos</Text>
-          <Text className="font-semibold text-success-600">S/ {summary.income.toFixed(2)}</Text>
-        </View>
+        <Text className="text-textSecondary">Ingresos:</Text>
+        <Text className="text-success font-semibold">+S/ {(balance.totalIncome ?? 0).toFixed(2)}</Text>
+      </View>
 
-        <View className="items-center w-[30%]">
-          <Ionicons name="arrow-down-circle" size={28} color="#E53935" />
-          <Text className="text-sm text-textSecondary-500 mt-1">Gastos</Text>
-          <Text className="font-semibold text-danger-500">S/ {summary.expense.toFixed(2)}</Text>
-        </View>
+      <View className="flex-row justify-between">
+        <Text className="text-textSecondary">Egresos:</Text>
+        <Text className="text-danger font-semibold">–S/ {(balance.totalExpenses ?? 0).toFixed(2)}</Text>
+      </View>
 
-        <View className="items-center w-[30%]">
-          <Ionicons name="wallet-outline" size={28} color="#00ACC1" />
-          <Text className="text-sm text-textSecondary-500 mt-1">Balance</Text>
-          <Text className="font-semibold text-secondary-600">S/ {summary.balance.toFixed(2)}</Text>
-        </View>
+      <View className="flex-row justify-between">
+        <Text className="text-textSecondary">Ahorros:</Text>
+        <Text className="text-warning font-semibold">S/ {(balance.totalSavings ?? 0).toFixed(2)}</Text>
+      </View>
+
+      <View className="flex-row justify-between border-t border-gray-200 pt-2 mt-2">
+        <Text className="text-textPrimary font-medium">Balance:</Text>
+        <Text className="text-primary font-bold text-lg">S/ {(balance.balance ?? 0).toFixed(2)}</Text>
       </View>
     </View>
   );

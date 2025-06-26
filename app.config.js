@@ -4,7 +4,7 @@ export default {
     name: "luqa-client",
     slug: "luqa-client",
     extra: {
-      API_URL: "http://192.168.1.2:5115/api",
+      API_URL: process.env.API_URL,
     },
   },
 };

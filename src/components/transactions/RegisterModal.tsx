@@ -1,176 +1,182 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
   View,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Alert,
-  Image,
+  ScrollView,
 } from "react-native";
-import * as Speech from "expo-speech";
 import { Ionicons } from "@expo/vector-icons";
+import { getUserSubcategories } from "@/shared/services/subcategoryService";
 
-interface Props {
+type Props = {
   visible: boolean;
   onClose: () => void;
-  onSubmit: (data: { amount: number; description: string }) => void;
-}
+  onSubmit: (data: {
+    amount: number;
+    description: string;
+    transactionType: "Debit" | "Credit";
+    subcategoryId?: number;
+  }) => void;
+};
 
 export default function RegisterModal({ visible, onClose, onSubmit }: Props) {
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
+  const [transactionType, setTransactionType] =
+    useState<"Debit" | "Credit">("Debit");
+  const [subcategoryId, setSubcategoryId] = useState<number | null>(null);
+  const [subcategories, setSubcategories] = useState([]);
 
-  const speak = () => {
-    const example = "Gasté 20 soles en comida";
-    Speech.speak("Por favor, di algo como: " + example);
-  };
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      try {
+        const data = await getUserSubcategories();
+        setSubcategories(data);
+        if (data.length > 0) setSubcategoryId(data[0].subcategoryId);
+      } catch (error) {
+        console.error("Error al cargar subcategorías:", error);
+      }
+    };
 
-  const simulateVoiceInput = () => {
-    const simulatedText = "Gasté 25 soles en transporte";
-
-    const montoMatch = simulatedText.match(/(\d+(?:[\.,]\d+)?)/);
-    const descMatch = simulatedText.match(/en (.+)/i);
-
-    if (montoMatch && descMatch) {
-      const monto = parseFloat(montoMatch[1]);
-      const descripcion = descMatch[1];
-
-      setAmount(monto);
-      setDescription(descripcion);
-
-      Alert.alert("🎤 Entrada por voz", `Monto: ${monto}\nDescripción: ${descripcion}`);
-    } else {
-      Alert.alert("❌ No se pudo reconocer la voz correctamente");
+    if (visible && transactionType === "Debit") {
+      fetchSubcategories();
     }
-  };
+  }, [visible, transactionType]);
 
   const handleSave = () => {
-    if (!amount || !description) {
-      Alert.alert("Campos incompletos", "Ingresa monto y descripción.");
+    const parsedAmount = parseFloat(amount);
+    if (
+      isNaN(parsedAmount) ||
+      !description.trim() ||
+      (transactionType === "Debit" && !subcategoryId)
+    ) {
+      alert("Completa todos los campos.");
       return;
     }
-    onSubmit({ amount, description });
+
+    onSubmit({
+      amount: parsedAmount,
+      description,
+      transactionType,
+      subcategoryId: transactionType === "Debit" ? subcategoryId! : undefined,
+    });
+
+    setAmount("");
+    setDescription("");
+    setTransactionType("Debit");
+    setSubcategoryId(null);
+    onClose();
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        <View style={styles.modal}>
-          <Text style={styles.title}> Registrar Movimiento</Text>
+    <Modal visible={visible} transparent animationType="slide">
+      <View className="flex-1 items-center justify-center bg-black/80 px-4">
+        <View className="w-full rounded-3xl bg-white p-6">
+          <Text className="mb-4 text-lg font-semibold text-primary-700 text-center">
+            Registrar Movimiento
+          </Text>
 
           <TextInput
-            placeholder="Monto en soles"
+            placeholder="Monto (S/)"
             keyboardType="numeric"
-            value={amount.toString()}
-            onChangeText={(text) => setAmount(parseFloat(text) || 0)}
-            style={styles.input}
-            placeholderTextColor="#888"
+            value={amount}
+            onChangeText={setAmount}
+            className="mb-3 rounded-lg border border-gray-300 px-4 py-2 text-base text-gray-800"
           />
 
           <TextInput
-            placeholder="¿En qué lo gastaste?"
+            placeholder="Descripción"
             value={description}
             onChangeText={setDescription}
-            style={styles.input}
-            placeholderTextColor="#888"
+            className="mb-3 rounded-lg border border-gray-300 px-4 py-2 text-base text-gray-800"
           />
 
-          <Text style={styles.hintText}>Puedes usar tu voz para llenar los campos</Text>
+          {transactionType === "Debit" && (
+            <ScrollView
+              horizontal
+              className="mb-3"
+              contentContainerStyle={{ gap: 8 }}
+              showsHorizontalScrollIndicator={false}
+            >
+              {subcategories.map((sub: any) => (
+                <TouchableOpacity
+                  key={sub.subcategoryId}
+                  onPress={() => setSubcategoryId(sub.subcategoryId)}
+                  className={`rounded-full px-4 py-2 ${
+                    subcategoryId === sub.subcategoryId
+                      ? "bg-primary-800"
+                      : "bg-gray-200"
+                  }`}
+                >
+                  <Text
+                    className={`text-sm font-semibold ${
+                      subcategoryId === sub.subcategoryId
+                        ? "text-white"
+                        : "text-gray-800"
+                    }`}
+                  >
+                    {sub.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
 
-          <TouchableOpacity onPress={simulateVoiceInput} style={styles.micButtonCentered}>
-            <Ionicons name="mic" size={32} color="white" />
-          </TouchableOpacity>
+          <View className="mb-4 flex-row justify-around">
+            <TouchableOpacity
+              onPress={() => setTransactionType("Debit")}
+              className={`rounded-full px-4 py-2 ${
+                transactionType === "Debit" ? "bg-danger-600" : "bg-gray-300"
+              }`}
+            >
+              <Text className="text-white font-semibold">Gasto</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={speak}>
-            <Text style={[styles.hintText, { marginTop: 8 }]}>¿Ejemplo?</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setTransactionType("Credit")}
+              className={`rounded-full px-4 py-2 ${
+                transactionType === "Credit"
+                  ? "bg-success-600"
+                  : "bg-gray-300"
+              }`}
+            >
+              <Text className="text-white font-semibold">Ingreso</Text>
+            </TouchableOpacity>
+          </View>
 
-          <View style={styles.actions}>
-          <TouchableOpacity onPress={onClose} style={styles.cancelButton}>
-            <Text style={styles.cancelText}>Cancelar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-            <Text style={styles.saveText}>Guardar</Text>
-          </TouchableOpacity>
-        </View>
+          <View className="mb-4 items-center">
+            <TouchableOpacity
+              className="flex-row items-center justify-center rounded-full border border-gray-400 bg-white px-6 py-3 shadow-sm"
+              onPress={() => alert("Función de voz próximamente 🎙️")}
+            >
+              <Ionicons name="mic" size={22} color="#444" />
+              <Text className="ml-2 font-semibold text-gray-700">
+                Grabar por voz
+              </Text>
+            </TouchableOpacity>
+            <Text className="mt-2 text-xs italic text-gray-500">
+              Ejemplo: "20 en comida"
+            </Text>
+          </View>
 
+          <View className="flex-row justify-between">
+            <TouchableOpacity
+              className="rounded-lg bg-gray-200 px-4 py-2"
+              onPress={onClose}
+            >
+              <Text className="text-gray-800 font-medium">Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="rounded-lg bg-primary-800 px-4 py-2"
+              onPress={handleSave}
+            >
+              <Text className="text-white font-semibold">Guardar</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modal: {
-    backgroundColor: "#f5f9ff",
-    borderRadius: 20,
-    padding: 24,
-    width: "90%",
-    alignItems: "center",
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 16,
-    color: "#333",
-  },
-  input: {
-    width: "100%",
-    borderColor: "#cfd8dc",
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    backgroundColor: "white",
-    fontSize: 16,
-  },
-  hintText: {
-    fontSize: 14,
-    color: "#555",
-    textAlign: "center",
-  },
-  micButtonCentered: {
-    backgroundColor: "#007AFF",
-    padding: 16,
-    borderRadius: 50,
-    marginTop: 12,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-    width: "100%",
-  },
-  saveButton: {
-    backgroundColor: "#4CAF50",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-  },
-  saveText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  cancelButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-  },
-  cancelText: {
-    color: "#888",
-    fontSize: 16,
-  },
-});

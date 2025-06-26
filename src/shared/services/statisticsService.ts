@@ -1,47 +1,46 @@
 // src/shared/services/statisticsService.ts
-import axios from "axios";
-import Constants from "expo-constants";
+import API from "./routeService";
+const userId = 1; 
 
-const API_URL = Constants.expoConfig?.extra?.API_URL;
-const USER_ID = 2;
-
-// 1. Obtener asignaciones
-export const getBudgetAllocations = async (userId = USER_ID) => {
-  const res = await axios.get(`${API_URL}/BudgetAllocations/by-user/${userId}`);
-  return res.data;
-};
-
-// 2. Obtener categorías
-export const getCategories = async () => {
-  const res = await axios.get(`${API_URL}/Categories`);
-  return res.data;
-};
-
-// 3. Obtener subcategorías
-export const getSubcategories = async () => {
-  const res = await axios.get(`${API_URL}/Subcategories`);
-  return res.data;
-};
-
-// 4. Obtener resumen del mes por tipo de categoría
-export const getMonthlySummaryReal = async (userId = USER_ID) => {
-  const txs = await getTransactions(userId);
-
-  let income = 0;
-  let expense = 0;
-
-  for (const t of txs) {
-    if (t.transactionType === "Credit") income += t.amount;
-    else if (t.transactionType === "Debit") expense += t.amount;
+export const getUserBudget = async () => {
+  try {
+    const res = await API.get("/budget/by-user/1"); 
+    return res.data;
+  } catch (err: any) {
+    console.error("Error en getUserBudget", err.response?.status, err.response?.data);
+    throw err;
   }
-
-  const balance = income - expense;
-
-  return { income, expense, balance };
 };
 
 
-export const getTransactions = async (userId = USER_ID) => {
-  const res = await axios.get(`${API_URL}/Transactions/by-user/${userId}`);
-  return res.data;
+export const getTransactions = async () => {
+  try {
+    const res = await API.get("/transactions/user");
+    return res.data; 
+  } catch (err: any) {
+    console.error(" Error en getTransactions", err.response?.status, err.response?.data);
+    throw err;
+  }
+};
+
+
+export const getBudgetAllocations = async () => {
+  try {
+    const res = await API.get("/budget-allocations");
+    return res.data;
+  } catch (err: any) {
+    console.error(" Error en getBudgetAllocations", err.response?.status, err.response?.data);
+    throw err;
+  }
+};
+
+
+export const getCategories = async () => {
+  try {
+    const res = await API.get("/categories");
+    return res.data;
+  } catch (err: any) {
+    console.error(" Error en getCategories", err.response?.status, err.response?.data);
+    throw err;
+  }
 };
