@@ -21,7 +21,7 @@ export const createUserSlice = (
   userBalance: null as IUserBalance | null,
   userInfo: null as IUser | null,
 
-  // set function
+  // set function\
   setUserBalance: (balance: IUserBalance | null) => {
     set({ userBalance: balance });
   },

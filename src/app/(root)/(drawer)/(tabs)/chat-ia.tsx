@@ -22,12 +22,12 @@ export default function ChatIA() {
   };
 
   return (
-    <KeyboardAwareScrollView
-      contentContainerStyle={{ flexGrow: 1 }}
-      extraScrollHeight={20}
-      enableOnAndroid
-    >
-      <View className="flex-1 justify-between px-6 pt-10 pb-6 bg-background-100">
+    // <KeyboardAwareScrollView
+    //   contentContainerStyle={{ flexDirection: "column", flex: 1 }}
+    //   extraScrollHeight={20}
+    //   enableOnAndroid
+    // >
+      <View className="flex-1 justify-between px-6 pt-10 bg-background-100">
         <View className="items-center">
           <Text className="text-xl font-semibold text-primary-500 mb-4 text-center">
             Bienvenido a tu asistente inteligente
@@ -53,6 +53,6 @@ export default function ChatIA() {
           variant="floating"
         />
       </View>
-    </KeyboardAwareScrollView>
+    // </KeyboardAwareScrollView>
   );
 }

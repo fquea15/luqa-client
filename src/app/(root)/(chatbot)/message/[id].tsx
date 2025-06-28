@@ -63,12 +63,7 @@ export default function ChatMessageView() {
 
   return (
     <SafeAreaView className="flex-1 bg-background-100">
-      <KeyboardAwareScrollView
-        contentContainerStyle={{ flexGrow: 1, justifyContent: "space-between" }}
-        enableOnAndroid
-        extraScrollHeight={40}
-        keyboardShouldPersistTaps="handled"
-      >
+
         <ScrollView
           ref={scrollRef}
           style={{ flex: 1 }}
@@ -90,7 +85,6 @@ export default function ChatMessageView() {
             variant="bottom"
           />
         </View>
-      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
