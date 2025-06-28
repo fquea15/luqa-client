@@ -164,7 +164,7 @@ export default function HomeScreen() {
 
         {showMovements && (
           <TouchableOpacity
-            onPress={() => router.push("/(root)/(home)/transactions")}
+            onPress={() => router.push("/(root)/(home)/transaction")}
             className="mt-3"
           >
             <Text className="text-success-600 font-semibold text-center text-sm uppercase">
