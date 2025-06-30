@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import React from "react";
 import { Text, View } from "react-native";
+import { cn } from "@/shared/lib/utils";
 
 interface ChatMessageProps {
   text: string;
@@ -9,13 +10,14 @@ interface ChatMessageProps {
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ text, from }) => {
   const isUser = from === "human";
-
   return (
     <View
-      className={clsx("px-4 py-2  max-w-[75%] rounded-xl", {
-        "bg-primary-500 self-end rounded-br-none": isUser,
-        "bg-secondary-100 self-start rounded-bl-none": !isUser,
-      })}
+      className={cn(
+        "max-w-[75%] rounded-xl px-4 py-2",
+        isUser
+          ? "self-end rounded-br-none bg-primary-500 mr-5"
+          : "self-start rounded-bl-none bg-secondary-100 ml-5"
+      )}
     >
       <Text
         className={clsx("text-base", {

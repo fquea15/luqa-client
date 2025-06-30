@@ -37,8 +37,7 @@ export default function ChatIA() {
         });
 
         router.push({
-          pathname: "/(chatbot)/message/[id]",
-          params: { id: trimmedInput },
+          pathname: "/(root)/chat-bot",
         });
       }
     } catch (error) {
@@ -50,7 +49,6 @@ export default function ChatIA() {
   };
 
   const handleOption = async (option: string) => {
-
     const timestamp = new Date().toString();
 
     addMessage({
@@ -70,8 +68,7 @@ export default function ChatIA() {
         });
 
         router.push({
-          pathname: "/(chatbot)/message/[id]",
-          params: { id: option },
+          pathname: "/(root)/chat-bot",
         });
       }
     } catch (error) {

@@ -21,7 +21,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   return (
     <View
       className={clsx(
-        "flex-row items-center px-4 py-2 mx-4",
+        "flex-row items-center px-4 py-2 mx-5",
         "bg-secondary-100",
         {
           "rounded-full my-4": variant === "floating",

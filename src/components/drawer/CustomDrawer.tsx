@@ -137,7 +137,7 @@ const drawerItems: DrawerItem[] = [
     id: "profile",
     title: "Perfil",
     icon: User,
-    route: "/(root)/(drawer)/(tabs)/home",
+    route: "/(root)/profile",
   },
 ];
 

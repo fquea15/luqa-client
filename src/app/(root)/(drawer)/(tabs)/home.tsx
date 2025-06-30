@@ -91,6 +91,7 @@ export default function HomeScreen() {
   useEffect(() => {
     fetchTransactions();
     fetchUserName();
+    setUserBalance(userBalance);
   }, []);
 
   if (loading) return <Text className="p-4">Cargando balance...</Text>;

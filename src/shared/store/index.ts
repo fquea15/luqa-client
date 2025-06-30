@@ -1,4 +1,4 @@
-// src/shared/store/index.ts
+// src/shared/store/index.tsx
 import { create } from "zustand";
 import { createModalSlice, ModalState } from "./slices/modal-slice";
 import { createUserSlice, UserState } from "./slices/user-slice";

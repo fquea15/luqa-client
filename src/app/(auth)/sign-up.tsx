@@ -127,10 +127,6 @@ export default function SignUpScreen() {
           </Text>
         </View>
       </View>
-      <View className="mt-[40px]">
-        <Text className="text-[32px] font-semibold text-primary-500">Crea tu cuenta</Text>
-      </View>
-      <View />
     </ScrollView>
   );
 }
