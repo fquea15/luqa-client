@@ -1,20 +1,13 @@
 import React from "react";
 import { View } from "react-native";
 import ChatMessage from "./ChatMessage";
+import { IChatIaMessage } from "@/shared/interfaces/chat-ia-interface";
 
-interface Props {
-  messages: {
-    id: string;
-    text: string;
-    from: "user" | "bot";
-  }[];
-}
-
-export default function ChatMessageList({ messages }: Props) {
+export default function ChatMessageList({ messages }: { messages: IChatIaMessage[] }) {
   return (
-    <View className="gap-2 px-2 pb-4">
-      {messages.map((msg) => (
-        <ChatMessage key={msg.id} text={msg.text} from={msg.from} />
+    <View className="gap-3">
+      {messages.map((msg, index) => (
+        <ChatMessage key={index} text={msg.content} from={msg.type as "ia" | "human"} />
       ))}
     </View>
   );

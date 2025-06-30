@@ -18,7 +18,7 @@ export interface IAuthValidationResponse {
 
 export interface IUser {
   userId: number;
-  registrationDate: string;  // ISO string format
+  registrationDate: string; // ISO string format
   lastAccessed: string;
   isActive: boolean;
   roleId: number;
@@ -28,4 +28,11 @@ export interface IUser {
   fullName: string;
   email: string;
   profilePicture: string;
+}
+
+export interface IUserProfile extends IUser {
+  total_points?: number | null;
+  lives?: number | null;
+  completedLessons?: number | null;
+  totalLessons?: number | null;
 }

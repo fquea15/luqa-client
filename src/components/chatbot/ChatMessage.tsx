@@ -4,15 +4,15 @@ import { Text, View } from "react-native";
 
 interface ChatMessageProps {
   text: string;
-  from: "user" | "bot";
+  from: "ia" | "human";
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ text, from }) => {
-  const isUser = from === "user";
+  const isUser = from === "human";
 
   return (
     <View
-      className={clsx("px-4 py-2 my-1 mx-3 max-w-[75%] rounded-xl", {
+      className={clsx("px-4 py-2  max-w-[75%] rounded-xl", {
         "bg-primary-500 self-end rounded-br-none": isUser,
         "bg-secondary-100 self-start rounded-bl-none": !isUser,
       })}

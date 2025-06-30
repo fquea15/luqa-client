@@ -1,13 +1,15 @@
-import { IUserBalance, IUser } from "@/shared/interfaces/user-interface";
+import { IUserBalance, IUser, IUserProfile } from "@/shared/interfaces/user-interface";
 
 export type UserState = {
   //User states
   userBalance: IUserBalance | null;
   userInfo: IUser | null;
+  userProfile: IUserProfile | null;
 
   // IUser Set
   setUserBalance: (balance: IUserBalance | null) => void;
   setUserInfo: (userInfo: IUser | null) => void;
+  setUserProfile: (userInfo: IUserProfile | null) => void;
 
   // Actions
   updateUserBalance: (balance: IUserBalance) => void;
@@ -20,6 +22,7 @@ export const createUserSlice = (
   // state definition
   userBalance: null as IUserBalance | null,
   userInfo: null as IUser | null,
+  userProfile: null as IUserProfile | null,
 
   // set function\
   setUserBalance: (balance: IUserBalance | null) => {
@@ -27,6 +30,9 @@ export const createUserSlice = (
   },
   setUserInfo: (userInfo: IUser | null) => {
     set({ userInfo: userInfo });
+  },
+  setUserProfile: (userInfo: IUserProfile | null) => {
+    set({ userProfile: userInfo });
   },
 
   // Actions implement

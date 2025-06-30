@@ -11,7 +11,7 @@ export type ChatIaState = {
   addMessage: (message: IChatIaMessage | null) => void;
 };
 
-export const createUserSlice = (
+export const createChatIaSlice = (
   set: (partial: Partial<ChatIaState>) => void,
   get: () => ChatIaState
 ) => ({
@@ -22,9 +22,10 @@ export const createUserSlice = (
 
   addMessage: (message: IChatIaMessage | null) => {
     const { messages } = get();
-    if (message) {
-      set({ messages: [message, ...(messages || [])] });
+    console.log(message);
+    if (!message) {
+      set({ messages });
     }
-    set({ messages });
+    set({ messages: [...(messages || []), message!] });
   },
 });
