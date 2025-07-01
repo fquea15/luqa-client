@@ -25,18 +25,12 @@ export default function StatisticScreen() {
         const a = await getBudgetAllocations();
         const c = await getCategories();
 
-        // ✅ Logs para depuración
-        console.log("📊 Presupuesto:", b);
-        console.log("📊 Transacciones:", t);
-        console.log("📊 Asignaciones:", a);
-        console.log("📊 Categorías:", c);
-
         setBalance({
           totalIncome: b?.budgetLimit || 0,
           totalExpenses: t
             .filter((tx: any) => tx.transactionType === "Debit")
             .reduce((sum: number, tx: any) => sum + tx.amount, 0),
-          totalSavings: 0, // ✅ corregido temporalmente
+          totalSavings: 0, 
           balance:
             b?.budgetLimit -
             t.filter((tx: any) => tx.transactionType === "Debit")

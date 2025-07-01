@@ -1,4 +1,7 @@
+// subcategoryService.ts
+
 import API from "./routeService";
+import { Subcategory } from "@/types/budget";
 
 export const getUserSubcategories = async () => {
   const res = await API.get("/subcategories/user");
@@ -16,37 +19,48 @@ export const getBudgetedSubcategories = async (
 
 export const getAllCategoriesWithSubcategories = async (budgetId: number) => {
   const categories = await API.get("/categories");
-  
-  // Para cada categoría, obtener sus subcategorías
+
   const categoriesWithSubs = await Promise.all(
     categories.data.map(async (category: any) => {
       try {
-        const subcategories = await getBudgetedSubcategories(budgetId, category.categoryId);
+        const subcategories = await getBudgetedSubcategories(
+          budgetId,
+          category.categoryId
+        );
         return {
           ...category,
-          subcategories: subcategories || []
+          subcategories: subcategories || [],
         };
       } catch (error) {
-        // Si no hay subcategorías (404), devolver array vacío
         return {
           ...category,
-          subcategories: []
+          subcategories: [],
         };
       }
     })
   );
-  
+
   return categoriesWithSubs;
 };
 
-
-interface CreateSubcategoryDto {
+// Asegura que incluyes todos los campos esperados por el backend
+export interface CreateSubcategoryDto {
   name: string;
   categoryId: number;
   userId: number;
+  isActive?: number;
+  createdBy?: number;
 }
 
-export async function createSubcategory(data: CreateSubcategoryDto) {
-  const response = await API.post("/subcategories/user", data);
-  return response.data; // ← debe contener el nuevo subcategoryId
-}
+// ✅ Función final para crear subcategoría correctamente
+export const createSubcategory = async (subcategory: CreateSubcategoryDto) => {
+  // Asignar valores por defecto si no vienen desde el componente
+  const payload = {
+    ...subcategory,
+    isActive: subcategory.isActive ?? 1,
+    createdBy: subcategory.createdBy ?? subcategory.userId,
+  };
+
+  const response = await API.post("/subcategories/user", payload);
+  return response.data;
+};

@@ -16,7 +16,7 @@ const Layout = () => {
       <Stack.Screen
         name="category/[id]"
         options={{
-          title: "Movimientos",
+          title: "Presupuesto",
         }}
       />
     </Stack>

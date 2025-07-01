@@ -64,7 +64,7 @@ export default function HomeScreen() {
         transactionDate: new Date().toISOString(),
       };
 
-      console.log("📌 Enviando transacción:", payload);
+      console.log(" Enviando transacción:", payload);
 
       await createTransaction(payload);
       await updateUserBalance({ amount, transactionType });

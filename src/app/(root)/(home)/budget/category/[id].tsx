@@ -1,99 +1,85 @@
 ﻿import React, { useEffect, useState } from "react";
 import {
   View,
-  Text,
-  TextInput,
-  TouchableOpacity,
   ScrollView,
+  Text,
   Alert,
+  TouchableOpacity,
 } from "react-native";
+import BudgetForm from "@/components/budget/BudgetForm";
+import SubcategoryList from "@/components/budget/SubcategoryList";
+import { Budget, Category, Subcategory } from "@/types/budget";
 import { getUserBudget } from "@/shared/services/budgetService";
-import { getAllCategoriesWithSubcategories } from "@/shared/services/subcategoryService";
+import {
+  getAllCategoriesWithSubcategories,
+  createSubcategory,
+  getUserSubcategories,
+} from "@/shared/services/subcategoryService";
 import { createBudgetAllocation } from "@/shared/services/budgetAllocationService";
-import { createSubcategory } from "@/shared/services/subcategoryService";
-
-
-// Tipos definidos directamente aquí
-type Budget = {
-  budgetId: number;
-  userId: number;
-  budgetLimit: number;
-};
-
-type Subcategory = {
-  subcategoryId: number;
-  name: string;
-  amount: number | string;
-};
-
-type Category = {
-  categoryId: number;
-  name: string;
-  type: "Expense" | "Savings";
-  subcategories: Subcategory[];
-};
 
 export default function BudgetOverview() {
   const [budget, setBudget] = useState<Budget | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formVisible, setFormVisible] = useState<{ [key: number]: boolean }>(
+    {}
+  );
+  const [newSub, setNewSub] = useState<{
+    [key: number]: { name: string; amount: string };
+  }>({});
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const budgetData = await getUserBudget();
-        setBudget(budgetData);
+ const loadData = async () => {
+  try {
+    const budgetData = await getUserBudget();
+    setBudget(budgetData);
+    const allCats = await getAllCategoriesWithSubcategories(budgetData.budgetId);
+    setCategories(allCats);
+  } catch (e) {
+    Alert.alert("Error", "No tienes un presupuesto definido para este mes");
+  } finally {
+    setLoading(false);
+  }
+};
 
-        const allCats = await getAllCategoriesWithSubcategories(budgetData.budgetId);
-        setCategories(allCats);
-      } catch (e) {
-        Alert.alert("Error", "No tienes un presupuesto definido para este mes");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+useEffect(() => {
+  loadData();
+}, []);
+
 
   const handleBudgetChange = (val: string) =>
-    setBudget((p: Budget | null) =>
+    setBudget((p) =>
       p ? { ...p, budgetLimit: parseInt(val) || 0 } : null
     );
 
-  const handleAddSub = (catIdx: number) => {
-    setCategories((prev: Category[]) => {
-      const up = [...prev];
-      up[catIdx].subcategories.push({
-        name: "",
-        amount: "",
-        subcategoryId: 0,
-      });
-      return up;
-    });
-  };
-
-  const handleSubChange = (
-    catIdx: number,
-    subIdx: number,
-    field: "name" | "amount",
-    val: string
+  const handleSubcategoryAmountChange = (
+    categoryId: number,
+    index: number,
+    value: string
   ) => {
-    setCategories((prev: Category[]) => {
-      const up = [...prev];
-      up[catIdx].subcategories[subIdx][field] = val;
-      return up;
-    });
+    setCategories((prev) =>
+      prev.map((cat) =>
+        cat.categoryId === categoryId
+          ? {
+              ...cat,
+              subcategories: cat.subcategories.map((sub, i) =>
+                i === index ? { ...sub, amount: value } : sub
+              ),
+            }
+          : cat
+      )
+    );
   };
 
   const sumAssigned = () =>
     categories
       .filter((c) => c.type !== "Savings")
       .reduce(
-        (tot: number, c: Category) =>
+        (tot, c) =>
           tot +
           c.subcategories.reduce(
-            (s: number, sub: Subcategory) =>
-              s + (parseFloat(sub.amount.toString()) || 0),
+            (s, sub) => s + (parseFloat(sub.amount.toString()) || 0),
             0
           ),
         0
@@ -102,53 +88,119 @@ export default function BudgetOverview() {
   const getSavingsAmount = () =>
     (budget?.budgetLimit || 0) - sumAssigned();
 
+  const handleAddNewSubcategory = (catId: number) => {
+    const newSubData = newSub[catId];
+    if (!newSubData?.name?.trim() || !newSubData?.amount?.trim()) {
+      Alert.alert("Error", "Por favor complete todos los campos");
+      return;
+    }
+
+    const amount = parseFloat(newSubData.amount);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert("Error", "El monto debe ser un número válido mayor a 0");
+      return;
+    }
+
+    setCategories((prev) =>
+      prev.map((c) =>
+        c.categoryId === catId
+          ? {
+              ...c,
+              subcategories: [
+                ...c.subcategories,
+                {
+                  name: newSubData.name.trim(),
+                  amount: newSubData.amount,
+                  subcategoryId: 0,
+                },
+              ],
+            }
+          : c
+      )
+    );
+
+    setNewSub((prev) => ({
+      ...prev,
+      [catId]: { name: "", amount: "" },
+    }));
+    setFormVisible((prev) => ({ ...prev, [catId]: false }));
+  };
+
   const handleSave = async () => {
-  try {
-    if (!budget) return;
-    const bid = budget.budgetId;
-    const uid = budget.userId;
+    if (saving || !budget) return;
+    try {
+      setSaving(true);
 
-    // 1. Guardar subcategorías para Necesidades y Gustos
-    for (const c of categories.filter((c) => c.type !== "Savings")) {
-      for (let sub of c.subcategories) {
-        let subcategoryId = sub.subcategoryId;
-
-        // Si es nueva subcategoría, primero la creamos
-        if (!subcategoryId || subcategoryId === 0) {
-          const created = await createSubcategory({
-            name: sub.name,
-            categoryId: c.categoryId,
-            userId: uid,
-          });
-          subcategoryId = created.subcategoryId;
-        }
-
-        await createBudgetAllocation({
-          budgetId: bid,
-          subcategoryId,
-          assignedAmount: parseFloat(sub.amount.toString()) || 0,
-        });
+      const totalAsignado = sumAssigned();
+      if (totalAsignado > budget.budgetLimit) {
+        Alert.alert(
+          "Advertencia",
+          "El total asignado supera tu presupuesto"
+        );
+        return;
       }
-    }
 
-    // 2. Guardar asignación automática para Ahorros
-    const savCat = categories.find((c) => c.type === "Savings");
-    if (savCat && savCat.subcategories.length > 0) {
-      const savingsAmount = getSavingsAmount();
-      const savingsSub = savCat.subcategories[0];
-      await createBudgetAllocation({
-        budgetId: bid,
-        subcategoryId: savingsSub.subcategoryId,
-        assignedAmount: savingsAmount,
-      });
-    }
+      const existingSubs = await getUserSubcategories();
 
-    Alert.alert("Éxito", "Presupuesto guardado correctamente ✅");
-  } catch (e) {
-    console.error("Error en guardar presupuesto:", e);
-    Alert.alert("Error", "No se pudo guardar el presupuesto");
-  }
-};
+      for (const c of categories.filter((c) => c.type !== "Savings")) {
+        for (let sub of c.subcategories) {
+          const amount = parseFloat(sub.amount.toString());
+          if (!sub.name || isNaN(amount) || amount <= 0) continue;
+
+          let subcategoryId = sub.subcategoryId;
+          if (!subcategoryId || subcategoryId === 0) {
+            const alreadyExists = existingSubs.find(
+              (s: Subcategory) =>
+                s.name.toLowerCase().trim() ===
+                  sub.name.toLowerCase().trim() &&
+                s.categoryId === c.categoryId &&
+                s.userId === budget.userId
+            );
+
+            if (alreadyExists) {
+              subcategoryId = alreadyExists.subcategoryId;
+            } else {
+              const created = await createSubcategory({
+                name: sub.name.trim(),
+                categoryId: c.categoryId,
+                userId: budget.userId,
+              });
+              subcategoryId = created.subcategoryId;
+            }
+          }
+
+          await createBudgetAllocation({
+            budgetId: budget.budgetId,
+            subcategoryId,
+            assignedAmount: amount,
+          });
+        }
+      }
+
+      const savCat = categories.find((c) => c.type === "Savings");
+      if (savCat && savCat.subcategories.length > 0) {
+        const savingsAmount = getSavingsAmount();
+        if (savingsAmount > 0) {
+          await createBudgetAllocation({
+            budgetId: budget.budgetId,
+            subcategoryId: savCat.subcategories[0].subcategoryId,
+            assignedAmount: savingsAmount,
+          });
+        }
+      }
+
+      Alert.alert("Éxito", "Presupuesto guardado correctamente ");
+      await loadData();
+      setIsEditing(false); 
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        "No se pudo guardar el presupuesto. Intente nuevamente."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -159,92 +211,136 @@ export default function BudgetOverview() {
   }
 
   return (
-  <ScrollView className="px-4 py-8 bg-background-100 space-y-8">
-    {/* Total Presupuesto */}
-    <View className="bg-white rounded-2xl p-6 shadow-sm">
-      <Text className="text-textPrimary-800 text-base font-semibold mb-2">
-        ¿Cuánto deseas presupuestar este mes?
-      </Text>
-      <TextInput
-        keyboardType="numeric"
-        value={budget?.budgetLimit?.toString()}
-        onChangeText={text => handleBudgetChange(text)}
-        className="bg-background-50 border border-primary-200 text-textPrimary-800 px-4 py-3 rounded-xl"
-        placeholder="Ej. 800"
-        placeholderTextColor="#9AA5B1"
-      />
-    </View>
-
-    {/* Categorías */}
-    {categories.map((cat: Category, ci: number) => {
-      const isSavings = cat.type === "Savings";
-      return (
-        <View
-          key={cat.categoryId}
-          className="bg-white rounded-2xl p-6 shadow-sm space-y-5"
-        >
-          <Text className="text-textPrimary-800 text-lg font-bold">
-            {cat.name}
+    <ScrollView className="px-4 py-8 bg-background-100 space-y-8">
+      {!isEditing ? (
+        <>
+          <Text className="text-xl font-bold text-textPrimary-800">
+            Presupuesto Total: S/. {budget?.budgetLimit?.toFixed(2)}
           </Text>
 
-          {cat.subcategories.map((sub: Subcategory, si: number) => (
-            <View key={si} className="mb-6">
-              <TextInput
-                editable={!isSavings}
-                placeholder="Nombre de subcategoría"
-                value={sub.name}
-                onChangeText={(t) => handleSubChange(ci, si, "name", t)}
-                className={`border px-4 py-3 rounded-xl mb-4 ${
-                  isSavings
-                    ? "bg-background-200 border-gray-200 text-gray-500"
-                    : "bg-background-50 border-primary-200 text-textPrimary-800"
-                }`}
-              />
-              <TextInput
-                editable={!isSavings}
-                placeholder="Monto asignado"
-                keyboardType="numeric"
-                value={sub.amount?.toString() || ""}
-                onChangeText={(t) => handleSubChange(ci, si, "amount", t)}
-                className={`border px-4 py-3 rounded-xl ${
-                  isSavings
-                    ? "bg-background-200 border-gray-200 text-gray-500"
-                    : "bg-background-50 border-primary-200 text-textPrimary-800"
-                }`}
-              />
-            </View>
-          ))}
-
-          {!isSavings && (
-            <TouchableOpacity
-              className="mt-2"
-              onPress={() => handleAddSub(ci)}
-            >
-              <Text className="text-secondary-500 font-medium">
-                + Agregar subcategoría
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {isSavings && (
-            <Text className="mt-2 text-success-700 font-semibold">
-              Ahorro : S/. {getSavingsAmount().toFixed(2)}
-            </Text>
-          )}
-        </View>
+          {categories.map((cat) => {
+  const isSavings = cat.type === "Savings";
+  const totalCat = isSavings
+    ? getSavingsAmount()
+    : cat.subcategories.reduce(
+        (sum, sub) => sum + (parseFloat(sub.amount?.toString()) || 0),
+        0
       );
-    })}
 
-    <TouchableOpacity
-      onPress={handleSave}
-      className="bg-primary-500 py-4 rounded-2xl items-center shadow-md"
-    >
-      <Text className="text-white font-bold text-base">
-        Guardar presupuesto
-      </Text>
-    </TouchableOpacity>
-  </ScrollView>
-);
+            return (
+              <View
+                key={cat.categoryId}
+                className="bg-white p-4 rounded-2xl shadow-md space-y-2"
+              >
+                <Text className="text-lg font-semibold text-textPrimary-700">
+                  {cat.name} - S/. {totalCat.toFixed(2)}
+                </Text>
 
+                {cat.subcategories.map((sub, idx) => (
+                  <View
+                    key={idx}
+                    className="flex-row justify-between border-b border-gray-200 py-2"
+                  >
+                    <Text className="text-textPrimary-800">
+                      {sub.name}
+                    </Text>
+                    <Text className="text-textPrimary-700">
+                      S/.{" "}
+                      {parseFloat(
+                        sub.amount?.toString() || "0"
+                      ).toFixed(2)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            );
+          })}
 
+          <TouchableOpacity
+            onPress={() => setIsEditing(true)}
+            className="bg-primary-500 py-4 rounded-2xl items-center shadow-md mt-6"
+          >
+            <Text className="text-white font-bold text-base">
+              Editar presupuesto
+            </Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <BudgetForm budget={budget} onChange={handleBudgetChange} />
+
+          {categories.map((cat) => {
+            const isSavings = cat.type === "Savings";
+            const totalAmount = isSavings
+              ? getSavingsAmount()
+              : cat.subcategories.reduce(
+                  (acc, s) =>
+                    acc + (parseFloat(s.amount.toString()) || 0),
+                  0
+                );
+
+            return (
+              <SubcategoryList
+                key={cat.categoryId}
+                category={cat}
+                isSavings={isSavings}
+                totalAmount={totalAmount}
+                formVisible={formVisible[cat.categoryId] || false}
+                newSub={newSub[cat.categoryId] || {
+                  name: "",
+                  amount: "",
+                }}
+                onAmountChange={(i, val) =>
+                  handleSubcategoryAmountChange(cat.categoryId, i, val)
+                }
+                onFormChange={(field, val) =>
+                  setNewSub((prev) => ({
+                    ...prev,
+                    [cat.categoryId]: {
+                      ...prev[cat.categoryId],
+                      [field]: val,
+                    },
+                  }))
+                }
+                onAdd={() => handleAddNewSubcategory(cat.categoryId)}
+                onCancel={() =>
+                  setFormVisible((prev) => ({
+                    ...prev,
+                    [cat.categoryId]: false,
+                  }))
+                }
+                onShowForm={() =>
+                  setFormVisible((prev) => ({
+                    ...prev,
+                    [cat.categoryId]: true,
+                  }))
+                }
+              />
+            );
+          })}
+
+          <TouchableOpacity
+            onPress={handleSave}
+            disabled={saving}
+            className={`${
+              saving ? "bg-gray-400" : "bg-primary-500"
+            } py-4 rounded-2xl items-center shadow-md`}
+          >
+            <Text className="text-white font-bold text-base">
+              {saving ? "Guardando..." : "Guardar presupuesto"}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setIsEditing(false)}
+            className="mt-4 py-3 border border-primary-400 rounded-xl items-center"
+          >
+            <Text className="text-primary-500 font-semibold">
+              Cancelar edición
+            </Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </ScrollView>
+  );
 }
