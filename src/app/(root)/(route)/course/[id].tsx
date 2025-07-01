@@ -2,11 +2,11 @@
 import { getCourseById } from "@/shared/services/courseService";
 import { getLessonProgressByCourse, LessonProgress } from "@/shared/services/lessonProgressService";
 import { getLessonsByCourseId, Lesson } from "@/shared/services/lessonService";
+import { useAppStore } from "@/shared/store";
+import { UserState } from "@/shared/store/slices/user-slice";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
-import { useAppStore } from "@/shared/store";
-import { UserState } from "@/shared/store/slices/user-slice";
 
 export default function CourseLessonsScreen() {
   const { id } = useLocalSearchParams();

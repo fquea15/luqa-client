@@ -5,7 +5,7 @@ import { Image, Text, TouchableOpacity, View } from "react-native";
 interface Props {
   questions: any[];
   lessonId: number;
-  onFinish?: () => void;
+  onFinish?: (answeredCorrectly: boolean) => void;
   onReplay?: () => void;
 }
 
@@ -14,6 +14,7 @@ export default function QuestionCard({ questions, lessonId, onFinish, onReplay }
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [answers, setAnswers] = useState<{ isCorrect: boolean }[]>([]);
 
   const question = questions[currentIndex];
 
@@ -21,7 +22,7 @@ export default function QuestionCard({ questions, lessonId, onFinish, onReplay }
     setSelectedOptionId(option.answerId);
     setIsCorrect(option.isCorrect);
     setShowFeedback(true);
-    // ✅ Puntos y vidas ahora solo se gestionan desde el backend
+    setAnswers(prev => [...prev, { isCorrect: option.isCorrect }]);
   };
 
   const handleNext = () => {
@@ -38,10 +39,13 @@ export default function QuestionCard({ questions, lessonId, onFinish, onReplay }
     setSelectedOptionId(null);
     setIsCorrect(null);
     setShowFeedback(false);
+    setAnswers([]);
     onReplay?.();
   };
 
   const isLast = currentIndex === questions.length - 1 && showFeedback;
+
+  const allCorrect = answers.every(a => a.isCorrect);
 
   return (
     <View className="bg-white rounded-3xl p-6 shadow-2xl justify-center">
@@ -94,10 +98,7 @@ export default function QuestionCard({ questions, lessonId, onFinish, onReplay }
               style={{ marginRight: 8 }}
             />
             <Text className="text-gray-700 text-base text-center flex-1">
-              {
-                question.options.find((opt: any) => opt.answerId === selectedOptionId)
-                  ?.feedback
-              }
+              {question.options.find((opt: any) => opt.answerId === selectedOptionId)?.feedback}
             </Text>
           </View>
 
@@ -118,12 +119,11 @@ export default function QuestionCard({ questions, lessonId, onFinish, onReplay }
                 <Text className="text-primary-500 font-semibold">Volver a ver</Text>
               </TouchableOpacity>
               <TouchableOpacity
-              onPress={() => onFinish?.(!!isCorrect)}
-              className="bg-secondary-600 px-6 py-3 rounded-full shadow-lg"
-            >
-              <Text className="text-white font-semibold">Siguiente lección</Text>
-            </TouchableOpacity>
-
+                onPress={() => onFinish?.(allCorrect)}
+                className="bg-secondary-600 px-6 py-3 rounded-full shadow-lg"
+              >
+                <Text className="text-white font-semibold">Siguiente lección</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>

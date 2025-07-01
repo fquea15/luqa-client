@@ -1,11 +1,11 @@
 import { getUserStats, redeemLives as redeemLivesAPI } from "@/shared/services/userStatsService";
+import { useAppStore } from "@/shared/store";
+import { UserState } from "@/shared/store/slices/user-slice";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { Video } from "expo-av";
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, Dimensions, Image, Text, TouchableOpacity, View } from "react-native";
 import * as Animatable from "react-native-animatable";
-import { useAppStore } from "@/shared/store";
-import { UserState } from "@/shared/store/slices/user-slice";
 
 const MOTIVATIONAL_PHRASES = [
   "Hoy puede ser el primer paso hacia tu libertad financiera. ",

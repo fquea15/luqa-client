@@ -1,9 +1,9 @@
 // ✅ Archivo: src/components/lesson/card-UseLive.tsx
+import { useAppStore } from "@/shared/store";
+import { UserState } from "@/shared/store/slices/user-slice";
 import axios from "axios";
 import Constants from "expo-constants";
 import { useEffect, useState } from "react";
-import { useAppStore } from "@/shared/store";
-import { UserState } from "@/shared/store/slices/user-slice";
 
 const API_URL = Constants.expoConfig?.extra?.API_URL;
 

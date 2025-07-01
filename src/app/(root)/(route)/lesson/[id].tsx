@@ -1,20 +1,20 @@
 ﻿import LessonPlayer from "@/components/lesson/card-LessonPlayer";
 import QuestionCard from "@/components/lesson/QuestionCard";
-import API from "@/shared/services/routeService";
 import { getLessonById, getLessonsByCourseId, Lesson } from "@/shared/services/lessonService";
 import { getQuestionsWithAnswersByLessonId } from "@/shared/services/questionService";
+import API from "@/shared/services/routeService";
+import { useAppStore } from "@/shared/store";
+import { UserState } from "@/shared/store/slices/user-slice";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
-import { useAppStore } from "@/shared/store";
-import { UserState } from "@/shared/store/slices/user-slice";
 
 export default function LessonScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { userInfo } = useAppStore() as UserState;
 
-  const userId = userInfo?.userId!;
+  const userId = userInfo?.userId!; 
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,12 +91,15 @@ export default function LessonScreen() {
       const nextLesson = allLessons.find(l => l.orderInCourse === lesson.orderInCourse + 1);
 
       setTimeout(() => {
-        if (nextLesson) {
-          router.replace(`/(root)/(route)/lesson/${nextLesson.lessonId}`);
-        } else {
-          router.replace(`/(root)/(route)/lecciones/${lesson.courseId}`);
-        }
-      }, 100); // ✅ esto evita el error de navegación
+  if (nextLesson) {
+    // 👉 Avanza a la siguiente lección si aún hay más
+    router.replace(`/(root)/(route)/lesson/${nextLesson.lessonId}`);
+  } else {
+    // ✅ Si ya no hay más lecciones, redirige a la lista de cursos
+    router.navigate(`/(root)/(route)/course/${lesson.courseId}`);
+  }
+}, 100);
+
     } catch (err: any) {
       console.error("❌ Error al finalizar la lección:", err?.message || "Error desconocido");
     }

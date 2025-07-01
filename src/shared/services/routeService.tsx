@@ -1,7 +1,7 @@
 // src/shared/services/api.ts
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import Constants from "expo-constants";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const baseURL = Constants.expoConfig?.extra?.API_URL;
 console.log("👉 URL base:", baseURL);

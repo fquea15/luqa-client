@@ -5,12 +5,12 @@ import {
   getCoursesByRouteId,
 } from "@/shared/services/courseService";
 import { getRoutes } from "@/shared/services/routeService";
+import { useAppStore } from "@/shared/store";
+import { UserState } from "@/shared/store/slices/user-slice";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAppStore } from "@/shared/store";
-import { UserState } from "@/shared/store/slices/user-slice";
 
 export default function CoursesScreen() {
   const { id } = useLocalSearchParams();
